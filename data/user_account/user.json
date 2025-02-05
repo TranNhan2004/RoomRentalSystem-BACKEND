@@ -1,0 +1,37 @@
+{
+    "manager-1":
+    {
+        "email": "nhan@gmail.com",
+        "password": "nhan@123",
+        "first_name": "Nhân",
+        "last_name": "Trần Hải",
+        "citizen_number": "0123456789",
+        "phone_number": "0364123456",
+        "date_of_birth": "2004-11-12",
+        "gender": "M"
+    },
+
+    "lessor-1":
+    {
+        "email": "thanh@gmail.com",
+        "password": "thanh@123",
+        "first_name": "Thành",
+        "last_name": "Nguyễn Văn",
+        "citizen_number": "9876543210",
+        "phone_number": "0987654321",
+        "date_of_birth": "1998-05-20",
+        "gender": "M"
+    },
+
+    "renter-1": 
+    {
+        "email": "huong@gmail.com",
+        "password": "huong@123",
+        "first_name": "Hương",
+        "last_name": "Lê Thị",
+        "citizen_number": "1234567890",
+        "phone_number": "0123456789",
+        "date_of_birth": "1996-08-15",
+        "gender": "F"
+    }
+}

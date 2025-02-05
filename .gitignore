@@ -1,0 +1,11 @@
+venv/
+*.pyc
+**/__pycache__/
+
+.env.*
+
+*.log
+*.pot
+*.py[cod]
+*.so
+*.secret
