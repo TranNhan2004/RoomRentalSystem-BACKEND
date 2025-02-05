@@ -17,13 +17,13 @@ deactivate
 pip install -r requirements.txt
 ```
 
-## 4. MAKE MIGRATIONS AND MIGRATE:
+## 4. MAKE MIGRATIONS AND MIGRATE
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ``` 
 
-## 5. RUN THE SERVER:
+## 5. RUN THE SERVER
 ```bash
 python manage.py runserver
 ```
