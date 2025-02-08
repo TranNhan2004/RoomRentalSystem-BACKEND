@@ -39,15 +39,49 @@ class RentalRoom(models.Model):
                 name='__RENTAL_ROOM__empty_number__lte__total_number'
             )
         ]
-    
+
 
 # -----------------------------------------------------------
-class ChargesList(models.Model):
+def rental_room_image_upload_to(instance, filename):
+    return upload_to_fn(
+        folders_path=['rental-rooms', f'room-{instance.rental_room.id}'],
+        filename=filename
+    )
+    
+class RentalRoomImage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    rental_room = models.ForeignKey(RentalRoom, related_name='charges', on_delete=models.CASCADE)
+    rental_room = models.ForeignKey(RentalRoom, related_name='images', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=rental_room_image_upload_to)
+
+
+# -----------------------------------------------------------
+class RoomChargesList(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    rental_room = models.ForeignKey(RentalRoom, related_name='room_charges_list', on_delete=models.CASCADE)
     
     room_charge = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     deposit = models.IntegerField(validators=[MinValueValidator(0)], default=0)
+        
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(deposit__lte=models.F('room_charge')),
+                name='__ROOM_CHARGES_LIST__deposit__lte__room_charge'
+            ),
+            models.CheckConstraint(
+                check=models.Q(end_date__gt=models.F('start_date')),
+                name='__ROOM_CHARGES_LIST__end_date__gt__start_date'
+            )
+        ]
+
+
+# -----------------------------------------------------------
+class ElectricityWaterChargesList(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    rental_room = models.ForeignKey(RentalRoom, related_name='electricity_water_charges_list', on_delete=models.CASCADE)
     
     ELECTRICITY_CHARGE_TYPE_CHOICES = [
         ('unit', '/kWh'),
@@ -71,6 +105,23 @@ class ChargesList(models.Model):
     )
     water_charge = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(end_date__gt=models.F('start_date')),
+                name='__ELECTRICITY_WATER_CHARGES_LIST__end_date__gt__start_date'
+            )
+        ]
+    
+
+# -----------------------------------------------------------
+class OtherChargesList(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    rental_room = models.ForeignKey(RentalRoom, related_name='other_charges_list', on_delete=models.CASCADE)
+    
     wifi_charge = models.IntegerField(validators=[MinValueValidator(0)], null=True)
     rubbish_charge = models.IntegerField(validators=[MinValueValidator(0)])
     
@@ -80,24 +131,7 @@ class ChargesList(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=models.Q(deposit__lte=models.F('room_charge')),
-                name='__CHARGES_LIST__deposit__lte__room_charge'
-            ),
-            models.CheckConstraint(
                 check=models.Q(end_date__gt=models.F('start_date')),
-                name='__CHARGES_LIST__end_date__gt__start_date'
+                name='__OTHER_CHARGES_LIST__end_date__gt__start_date'
             )
         ]
-
-
-# -----------------------------------------------------------
-def rental_room_image_upload_to(instance, filename):
-    return upload_to_fn(
-        folders_path=['rental-rooms', f'room-{instance.rental_room.id}'],
-        filename=filename
-    )
-    
-class RentalRoomImage(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    rental_room = models.ForeignKey(RentalRoom, related_name='images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to=rental_room_image_upload_to)
