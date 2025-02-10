@@ -1,5 +1,4 @@
 from rest_framework.serializers import ModelSerializer, PrimaryKeyRelatedField
-
 from .models import Province, District, Commune
 
 

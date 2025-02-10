@@ -1,5 +1,4 @@
 import uuid
-
 from django.db import models
 from apps.user_account.models import CustomUser
 
@@ -21,6 +20,6 @@ class Message(models.Model):
     content = models.TextField(max_length=2048)
     
     conversation = models.ForeignKey(Conversation, related_name='messages', on_delete=models.CASCADE)
-    sent_by = models.ForeignKey(CustomUser, related_name='sent_messages', on_delete=models.CASCADE)
+    sender = models.ForeignKey(CustomUser, related_name='sent_messages', on_delete=models.CASCADE)
     
     created_at = models.DateTimeField(auto_now_add=True)

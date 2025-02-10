@@ -1,16 +1,19 @@
-from rest_framework.serializers import ModelSerializer, PrimaryKeyRelatedField
+from rest_framework.serializers import ModelSerializer, ValidationError, PrimaryKeyRelatedField
 
-from .models import CustomUser, Lessor, Renter, Manager
+from .models import CustomUser
 from apps.address.models import Commune
 
 
 # -----------------------------------------------------------
 class CustomUserSerializer(ModelSerializer):
+    workplace_commune = PrimaryKeyRelatedField(queryset=Commune.objects.all(), required=False)
+    
     class Meta:
         model = CustomUser
         fields = (
             'id',
             'email',
+            'password',
             'first_name',
             'last_name',
             'citizen_number',
@@ -18,39 +21,29 @@ class CustomUserSerializer(ModelSerializer):
             'date_of_birth',
             'gender',
             'avatar',
+            'workplace_commune',
+            'workplace_additional_address',
+            'role',
             'created_at',
             'updated_at',
         )
     
+    def validate(self, data):
+        role = data.get('role', getattr(self.instance, 'role', None))
+        workplace_commune = data.get('workplace_commune')
+        workplace_additional_address = data.get('workplace_additional_address')
+        
+        if role != 'R':
+            data.pop('workplace_commune', None)
+            data.pop('workplace_additional_address', None)
+        else:
+            if not workplace_commune or not workplace_additional_address:
+                raise ValidationError('Thông tin địa chỉ làm việc phải được nhập!')
+        
+        return data
+    
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        representation.pop('password', None)   
         representation['gender'] = instance.get_gender_display()
         return representation
-    
-        
-# -----------------------------------------------------------
-class LessorSerializer(ModelSerializer):
-    user = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
-    
-    class Meta:
-        model = Lessor
-        fields = ('user', 'signature_image')
-    
-        
-# -----------------------------------------------------------
-class RenterSerializer(ModelSerializer):
-    user = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
-    workplace_main_address = PrimaryKeyRelatedField(queryset=Commune.objects.all())
-    
-    class Meta:
-        model = Renter
-        fields = ('user', 'signature_image', 'workplace_main_address', 'workplace_additional_address')
-    
-    
-# -----------------------------------------------------------
-class ManagerSerializer(ModelSerializer):
-    user = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
-    
-    class Meta:
-        model = Manager
-        fields = ('user',)

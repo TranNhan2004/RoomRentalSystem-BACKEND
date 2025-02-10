@@ -1,12 +1,9 @@
 import uuid
-
 from django.db import models
-from django.core.validators import MinValueValidator
-
+from django.core.validators import MinValueValidator, MaxValueValidator
 from backend_project.utils import upload_to_fn
-
 from apps.address.models import Commune
-from apps.user_account.models import Lessor, Manager
+from apps.user_account.models import CustomUser
 
 
 # -----------------------------------------------------------
@@ -24,10 +21,12 @@ class RentalRoom(models.Model):
     total_number = models.IntegerField(validators=[MinValueValidator(1)], default=1)
     empty_number = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     
+    average_rating = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(5)])
+    
     further_description = models.TextField(max_length=1024, blank=True, null=True)
     
-    approved_by = models.ForeignKey(Manager, related_name='approved_rooms', on_delete=models.CASCADE, null=True)
-    possessed_by = models.ForeignKey(Lessor, related_name='possessed_rooms', on_delete=models.CASCADE)
+    lessor = models.ForeignKey(CustomUser, related_name='possessed_rooms', on_delete=models.CASCADE)
+    manager = models.ForeignKey(CustomUser, related_name='approved_rooms', on_delete=models.CASCADE, null=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

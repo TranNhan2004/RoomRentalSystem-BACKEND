@@ -1,6 +1,4 @@
 from django.shortcuts import render
-
-# Create your views here.
 from .models import Province, District, Commune
 from .serializers import ProvinceSerializer, DistrictSerializer, CommuneSerializer
 from rest_framework import viewsets

@@ -1,10 +1,7 @@
 import uuid
-
 from django.db import models
-
 from backend_project.utils import upload_to_fn
-
-from apps.user_account.models import Renter
+from apps.user_account.models import CustomUser
 from apps.rental_room.models import RentalRoom
 
 
@@ -29,7 +26,7 @@ class RentalContract(models.Model):
     end_date = models.DateField()
     
     contract = models.ForeignKey(Contract, related_name='rented_contracts', on_delete=models.CASCADE)
-    rented_by = models.ForeignKey(Renter, related_name='rented_contracts', on_delete=models.CASCADE)
+    renter = models.ForeignKey(CustomUser, related_name='rented_contracts', on_delete=models.CASCADE)
     
     created_at = models.DateTimeField(auto_now_add=True)
     

@@ -1,5 +1,4 @@
 from rest_framework import viewsets
-
 from .models import RentalRoom, RentalRoomImage, RoomChargesList, ElectricityWaterChargesList, OtherChargesList
 from .serializers import (
     RentalRoomSerializer, 

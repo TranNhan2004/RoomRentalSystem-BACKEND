@@ -1,5 +1,4 @@
 from rest_framework.serializers import ModelSerializer, PrimaryKeyRelatedField
-
 from .models import Conversation, Message
 from apps.user_account.models import CustomUser
 
@@ -17,7 +16,7 @@ class ConversationSerializer(ModelSerializer):
 # -----------------------------------------------------------
 class MessageSerializer(ModelSerializer):
     conversation = PrimaryKeyRelatedField(queryset=Conversation.objects.all())
-    sent_by = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
+    sender = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
     
     class Meta:
         model = Message

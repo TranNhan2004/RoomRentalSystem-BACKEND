@@ -1,15 +1,14 @@
 from rest_framework.serializers import ModelSerializer, PrimaryKeyRelatedField
-
 from .models import RentalRoom, RentalRoomImage, RoomChargesList, ElectricityWaterChargesList, OtherChargesList
 from apps.address.models import Commune
-from apps.user_account.models import Lessor, Manager
+from apps.user_account.models import CustomUser
 
 
 # -----------------------------------------------------------
 class RentalRoomSerializer(ModelSerializer):
     main_address = PrimaryKeyRelatedField(queryset=Commune.objects.all())
-    approved_by = PrimaryKeyRelatedField(queryset=Manager.objects.all())
-    possesed_by = PrimaryKeyRelatedField(queryset=Lessor.objects.all())
+    lessor = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
+    manager = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
     
     class Meta:
         model = RentalRoom
