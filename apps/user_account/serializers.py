@@ -46,4 +46,5 @@ class CustomUserSerializer(ModelSerializer):
         representation = super().to_representation(instance)
         representation.pop('password', None)   
         representation['gender'] = instance.get_gender_display()
+        representation['role'] = instance.get_role_display()
         return representation
