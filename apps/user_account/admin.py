@@ -23,6 +23,6 @@ class CustomUserAdminForm(forms.ModelForm):
 
 class CustomUserAdmin(admin.ModelAdmin):
     form = CustomUserAdminForm
-    list_display = [field.name for field in CustomUser._meta.fields]
+    list_display = [field.name for field in CustomUser._meta.fields if field.name != 'password']
 
 admin.site.register(CustomUser, CustomUserAdmin)

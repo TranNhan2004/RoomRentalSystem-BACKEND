@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer, ValidationError, PrimaryKeyRelatedField
-
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import CustomUser
 from apps.address.models import Commune
 
@@ -48,3 +48,18 @@ class CustomUserSerializer(ModelSerializer):
         representation['gender'] = instance.get_gender_display()
         representation['role'] = instance.get_role_display()
         return representation
+    
+
+# -----------------------------------------------------------
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):    
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        
+        data['id'] = str(self.user.id)
+        data['email'] = self.user.email
+        data['first_name'] = self.user.first_name
+        data['last_name'] = self.user.last_name
+        data['role'] = self.user.role
+        return data
+    
+
