@@ -9,3 +9,5 @@ venv/
 *.py[cod]
 *.so
 *.secret
+
+*.pem

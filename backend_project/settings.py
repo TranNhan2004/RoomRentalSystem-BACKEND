@@ -17,10 +17,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.getenv('DEBUG'))
+DEBUG = os.getenv('DEBUG') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(' ')
-
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS').split(' ')
 
@@ -28,15 +27,18 @@ AUTH_USER_MODEL = 'user_account_app_label.CustomUser'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  
+        'rest_framework_simplejwt.authentication.JWTAuthentication'
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated'
     ],
 }
 
+# SESSION_COOKIE_DOMAIN = os.getenv('SESSION_COOKIE_DOMAIN')
+# CSRF_COOKIE_DOMAIN = os.getenv('CSRF_COOKIE_DOMAIN')
+
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -47,14 +49,16 @@ SIMPLE_JWT = {
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
-    'AUTH_COOKIE_PATH': '/api',
-    'AUTH_COOKIE_SECURE': bool(os.getenv('AUTH_COOKIE_SECURE')),
     'AUTH_COOKIE_HTTPONLY': True,
-    'AUTH_COOKIE_SAMESITE': 'Lax',
+    'AUTH_COOKIE_SECURE': True,
+    'AUTH_COOKIE_SAMESITE': 'None',
+    'AUTH_COOKIE_PATH': '/',
 }
 
 # Application definition
 INSTALLED_APPS = [
+    'corsheaders',
+    
     'apps.address',
     'apps.user_account',
     'apps.rental_room',
@@ -73,11 +77,12 @@ INSTALLED_APPS = [
     
     'rest_framework',
     'rest_framework_simplejwt',
-    
-    'corsheaders',
+
+    'sslserver'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -85,8 +90,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
-    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'backend_project.urls'

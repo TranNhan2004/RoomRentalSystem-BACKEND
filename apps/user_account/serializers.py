@@ -24,6 +24,7 @@ class CustomUserSerializer(ModelSerializer):
             'workplace_commune',
             'workplace_additional_address',
             'role',
+            'is_active',
             'created_at',
             'updated_at',
         )

@@ -1,11 +1,9 @@
 import uuid
-
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
-
 from backend_project.utils import upload_to_fn
-
 from apps.address.models import Commune
+
 
 # -----------------------------------------------------------
 # For admin
