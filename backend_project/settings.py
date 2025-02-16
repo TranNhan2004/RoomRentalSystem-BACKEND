@@ -19,9 +19,11 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(' ')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split()
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS').split(' ')
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS').split()
+CORS_TRUSTED_ORIGINS = os.getenv('CORS_TRUSTED_ORIGINS').split()
+CORS_ORIGINS_WHITELIST = os.getenv('CORS_ORIGINS_WHITELIST').split()
 
 AUTH_USER_MODEL = 'user_account_app_label.CustomUser'
 
@@ -38,8 +40,8 @@ REST_FRAMEWORK = {
 # CSRF_COOKIE_DOMAIN = os.getenv('CSRF_COOKIE_DOMAIN')
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1, minutes=10),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=8),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': False,
@@ -48,11 +50,7 @@ SIMPLE_JWT = {
     'VERIFYING_KEY': None,
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'USER_ID_FIELD': 'id',
-    'AUTH_COOKIE_HTTPONLY': True,
-    'AUTH_COOKIE_SECURE': True,
-    'AUTH_COOKIE_SAMESITE': 'None',
-    'AUTH_COOKIE_PATH': '/',
+    'USER_ID_FIELD': 'id'
 }
 
 # Application definition

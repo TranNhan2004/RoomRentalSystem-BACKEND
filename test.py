@@ -1,13 +1,12 @@
 import secrets
 
-# Tạo một secret key dài 32 ký tự
-# secret_key = secrets.token_urlsafe(64)
-# print(secret_key)
-# print(bool('True'))
-# print(bool('false'))
+# Tạo khóa AES 256-bit (32 byte)
+def generate_aes_key():
+    key = secrets.token_bytes(32)  # 32 byte = 256-bit
+    key_hex = key.hex()  # Chuyển đổi khóa thành chuỗi hexadecimal
+    return key_hex
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv('.env.development')
-print(os.getenv('AUTH_COOKIE_SECURE') == 'True')
+# In ra khóa
+if __name__ == "__main__":
+    key = generate_aes_key()
+    print(f"Your AES key (256-bit): {key}")
