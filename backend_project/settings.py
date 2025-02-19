@@ -36,8 +36,15 @@ REST_FRAMEWORK = {
     ],
 }
 
-# SESSION_COOKIE_DOMAIN = os.getenv('SESSION_COOKIE_DOMAIN')
-# CSRF_COOKIE_DOMAIN = os.getenv('CSRF_COOKIE_DOMAIN')
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+FRONTEND_URLS_REPLACE_FOR_SEND_EMAIL = os.getenv('FRONTEND_URLS_REPLACE_FOR_SEND_EMAIL').split()
+BACKEND_URL_FOR_SEND_EMAIL = os.getenv('BACKEND_URL_FOR_SEND_EMAIL')
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1, minutes=10),
@@ -119,7 +126,7 @@ WSGI_APPLICATION = 'backend_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DB_ENGINE'),
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
