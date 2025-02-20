@@ -14,11 +14,20 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.conf import settings
+from django.utils import timezone
+
 
 # -----------------------------------------------------------
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
+    
+    def update(self, request, *args, **kwargs):
+        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    def partial_update(self, request, *args, **kwargs):
+        request.data.pop('password')
+        return super().partial_update(request, *args, **kwargs)
     
 
 # -----------------------------------------------------------
@@ -27,11 +36,18 @@ class LoginView(TokenObtainPairView):
     
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
-        role = request.data.get('role')
-        if response.status_code == 200 and response.data.get('role') != role:
+        req_user_role = request.data.get('role')
+        res_user_role = response.data.get('user').get('role')
+        if response.status_code == 200 and req_user_role != res_user_role:
             return Response({'detail': 'Invalid role'}, status=status.HTTP_403_FORBIDDEN)
         
-        response.data.pop('role')
+        res_user_id = response.data.get('user').get('id')
+        user = get_user_model().objects.get(id=res_user_id)
+        user.last_login = timezone.now()
+        user.save()
+        user.refresh_from_db()
+        
+        response.data['user'] = CustomUserSerializer(user).data     
         return response
 
 
