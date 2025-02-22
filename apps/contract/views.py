@@ -10,7 +10,9 @@ class ContractViewSet(viewsets.ModelViewSet):
     serializer_class = ContractSerializer
     
     def update(self, request, *args, **kwargs):
-        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
 
 # -----------------------------------------------------------
@@ -19,4 +21,6 @@ class RentalContractViewSet(viewsets.ModelViewSet):
     serializer_class = RentalContractSerializer
     
     def update(self, request, *args, **kwargs):
-        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)

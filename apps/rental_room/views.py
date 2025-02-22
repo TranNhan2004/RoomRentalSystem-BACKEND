@@ -16,7 +16,9 @@ class RentalRoomViewSet(viewsets.ModelViewSet):
     serializer_class = RentalRoomSerializer
     
     def update(self, request, *args, **kwargs):
-        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
     
     
 # -----------------------------------------------------------
@@ -25,7 +27,9 @@ class RentalRoomImageViewSet(viewsets.ModelViewSet):
     serializer_class = RentalRoomImageSerializer
     
     def update(self, request, *args, **kwargs):
-        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
     
 
 # -----------------------------------------------------------
@@ -34,7 +38,9 @@ class RoomChargesListViewSet(viewsets.ModelViewSet):
     serializer_class = RoomChargesListSerializer
     
     def update(self, request, *args, **kwargs):
-        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
 
 # -----------------------------------------------------------
@@ -43,7 +49,9 @@ class ElectricityWaterChargesListViewSet(viewsets.ModelViewSet):
     serializer_class = ElectricityWaterChargesListSerializer
     
     def update(self, request, *args, **kwargs):
-        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
     
 
 # -----------------------------------------------------------
@@ -52,4 +60,6 @@ class OtherChargesListViewSet(viewsets.ModelViewSet):
     serializer_class = OtherChargesListSerializer  
     
     def update(self, request, *args, **kwargs):
-        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)

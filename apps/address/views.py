@@ -11,7 +11,10 @@ class ProvinceViewSet(viewsets.ModelViewSet):
     serializer_class = ProvinceSerializer
     
     def update(self, request, *args, **kwargs):
-        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
+    
 
 
 # -----------------------------------------------------------
@@ -25,7 +28,9 @@ class DistrictViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
     
     def update(self, request, *args, **kwargs):
-        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
 
 # -----------------------------------------------------------
@@ -34,4 +39,6 @@ class CommuneViewSet(viewsets.ModelViewSet):
     serializer_class = CommuneSerializer
     
     def update(self, request, *args, **kwargs):
-        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
