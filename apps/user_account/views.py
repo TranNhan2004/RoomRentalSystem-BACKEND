@@ -30,6 +30,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     
     def partial_update(self, request, *args, **kwargs):
         request.data.pop('password')
+        request.data.pop('avatar')
         return super().partial_update(request, *args, **kwargs)
 
     
@@ -155,3 +156,30 @@ class ChangePasswordView(APIView):
         user.save()
 
         return Response({"detail": "Password has been changed successfully"}, status=status.HTTP_200_OK)
+
+
+class HandleAvatar(APIView):
+    def patch(self, request, *arg, **kwargs):
+        user = request.user
+        
+        if 'avatar' in request.data:
+            if user.avatar:
+                user.avatar.delete(save=False)
+            
+            user.avatar = request.data['avatar']
+            user.save() 
+
+            return Response({"detail": "Avatar has been updated."}, status=status.HTTP_200_OK)
+        
+        return Response({"detail": "No avatar to update."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, *args, **kwargs):
+        user = request.user
+        
+        if user.avatar:
+            user.avatar.delete(save=False)  
+            return Response({"detail": "Avatar has been deleted."}, status=status.HTTP_200_OK)
+        
+        return Response({"detail": "No avatar to delete."}, status=status.HTTP_404_NOT_FOUND)
+    
+    

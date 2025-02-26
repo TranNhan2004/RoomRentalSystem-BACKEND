@@ -7,6 +7,7 @@ from .views import (
     SendEmailForResetPasswordView,
     ResetPasswordView,
     ChangePasswordView,
+    HandleAvatar
 )
 
 router = routers.DefaultRouter()
@@ -18,5 +19,6 @@ urlpatterns = [
     path('auth/reset-password/', SendEmailForResetPasswordView.as_view(), name='auth-reset-password'),
     path('auth/reset-password-confirm/<str:uidb64>/<str:token>/', ResetPasswordView.as_view(), name='auth-reset-password-confirm'),
     path('change-password/', ChangePasswordView.as_view(), name='change-password'),
+    path('handle-avatar/', HandleAvatar.as_view(), name='handle-avatar'),
     path('', include(router.urls)),
 ]
