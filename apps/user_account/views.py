@@ -31,6 +31,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         request.data.pop('password')
         return super().partial_update(request, *args, **kwargs)
+
     
 
 # -----------------------------------------------------------

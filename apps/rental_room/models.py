@@ -4,6 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from backend_project.utils import upload_to_fn
 from apps.address.models import Commune
 from apps.user_account.models import CustomUser
+from storages.backends.s3boto3 import S3Boto3Storage
 
 
 # -----------------------------------------------------------
@@ -44,14 +45,21 @@ class RentalRoom(models.Model):
 # -----------------------------------------------------------
 def rental_room_image_upload_to(instance, filename):
     return upload_to_fn(
-        folders_path=['rental-rooms', f'room-{instance.rental_room.id}'],
-        filename=filename
+        folders_path=f'rental-rooms-images/room-{instance.rental_room.id}',
+        filename=filename,
+        instance=instance
     )
     
 class RentalRoomImage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     rental_room = models.ForeignKey(RentalRoom, related_name='images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to=rental_room_image_upload_to)
+    image = models.ImageField(storage=S3Boto3Storage(), upload_to=rental_room_image_upload_to)
+    
+    def delete(self, *args, **kwargs):
+        if self.avatar:
+            self.avatar.delete(save=False)  
+
+        super(RentalRoomImage, self).delete(*args, **kwargs)
 
 
 # -----------------------------------------------------------

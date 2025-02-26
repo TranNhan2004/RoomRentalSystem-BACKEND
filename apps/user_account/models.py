@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 from backend_project.utils import upload_to_fn
 from apps.address.models import Commune
+from storages.backends.s3boto3 import S3Boto3Storage
 
 
 # -----------------------------------------------------------
@@ -17,10 +18,7 @@ class CustomUserManager(UserManager):
     
 # -----------------------------------------------------------
 def user_avatar_upload_to(instance, filename):
-    return upload_to_fn(
-        folders_path=['avatars', f'user-{instance.id}'],
-        filename=filename
-    )
+    return upload_to_fn(folder_path='avatars', filename=filename, instance=instance)
     
 class CustomUser(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -37,7 +35,7 @@ class CustomUser(AbstractUser):
         ('U', 'Không rõ')
     ]
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
-    avatar = models.ImageField(upload_to=user_avatar_upload_to, null=True, blank=True)
+    avatar = models.ImageField(storage=S3Boto3Storage(), upload_to=user_avatar_upload_to, null=True, blank=True)
     
     ROLE_CHOICES = [
         ('A', 'Quản trị viên'),
@@ -72,6 +70,12 @@ class CustomUser(AbstractUser):
         if self.password and not self.password.startswith('pbkdf2_sha256$'):
             self.set_password(self.password)
         super().save(*args, **kwargs)
+        
+    def delete(self, *args, **kwargs):
+        if self.avatar:
+            self.avatar.delete(save=False)  
+
+        super(CustomUser, self).delete(*args, **kwargs)
     
     def __str__(self):
         return self.email
