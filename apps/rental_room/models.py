@@ -27,6 +27,7 @@ class RentalRoom(models.Model):
     
     lessor = models.ForeignKey(CustomUser, related_name='possessed_rooms', on_delete=models.CASCADE)
     manager = models.ForeignKey(CustomUser, related_name='approved_rooms', on_delete=models.CASCADE, null=True)
+    is_active = models.BooleanField(default=False)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
