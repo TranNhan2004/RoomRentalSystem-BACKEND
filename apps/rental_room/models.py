@@ -12,7 +12,7 @@ class RentalRoom(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=64)    
     
-    commune = models.ForeignKey(Commune, related_name='rental_rooms', on_delete=models.CASCADE)
+    commune = models.ForeignKey(Commune, related_name='rental_rooms', on_delete=models.PROTECT)
     additional_address = models.TextField(max_length=512)
     
     closing_time = models.TimeField(null=True)
@@ -26,8 +26,8 @@ class RentalRoom(models.Model):
     
     further_description = models.TextField(max_length=1024, blank=True, null=True)
     
-    lessor = models.ForeignKey(CustomUser, related_name='possessed_rooms', on_delete=models.CASCADE)
-    manager = models.ForeignKey(CustomUser, related_name='approved_rooms', on_delete=models.CASCADE, null=True)
+    lessor = models.ForeignKey(CustomUser, related_name='possessed_rooms', on_delete=models.PROTECT)
+    manager = models.ForeignKey(CustomUser, related_name='approved_rooms', on_delete=models.PROTECT, null=True)
     is_active = models.BooleanField(default=False)
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -52,7 +52,7 @@ def rental_room_image_upload_to(instance, filename):
     
 class RentalRoomImage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    rental_room = models.ForeignKey(RentalRoom, related_name='images', on_delete=models.CASCADE)
+    rental_room = models.ForeignKey(RentalRoom, related_name='images', on_delete=models.PROTECT)
     image = models.ImageField(storage=S3Boto3Storage(), upload_to=rental_room_image_upload_to)
     
     def delete(self, *args, **kwargs):
@@ -65,7 +65,7 @@ class RentalRoomImage(models.Model):
 # -----------------------------------------------------------
 class RoomChargesList(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    rental_room = models.ForeignKey(RentalRoom, related_name='room_charges_list', on_delete=models.CASCADE)
+    rental_room = models.ForeignKey(RentalRoom, related_name='room_charges_list', on_delete=models.PROTECT)
     
     room_charge = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     deposit = models.IntegerField(validators=[MinValueValidator(0)], default=0)
@@ -89,7 +89,7 @@ class RoomChargesList(models.Model):
 # -----------------------------------------------------------
 class ElectricityWaterChargesList(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    rental_room = models.ForeignKey(RentalRoom, related_name='electricity_water_charges_list', on_delete=models.CASCADE)
+    rental_room = models.ForeignKey(RentalRoom, related_name='electricity_water_charges_list', on_delete=models.PROTECT)
     
     ELECTRICITY_CHARGE_TYPE_CHOICES = [
         ('unit', '/kWh'),
@@ -128,7 +128,7 @@ class ElectricityWaterChargesList(models.Model):
 # -----------------------------------------------------------
 class OtherChargesList(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    rental_room = models.ForeignKey(RentalRoom, related_name='other_charges_list', on_delete=models.CASCADE)
+    rental_room = models.ForeignKey(RentalRoom, related_name='other_charges_list', on_delete=models.PROTECT)
     
     wifi_charge = models.IntegerField(validators=[MinValueValidator(0)], null=True)
     rubbish_charge = models.IntegerField(validators=[MinValueValidator(0)])

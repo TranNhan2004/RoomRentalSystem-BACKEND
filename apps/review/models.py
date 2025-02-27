@@ -11,8 +11,8 @@ class Review(models.Model):
     comment = models.CharField(max_length=2048)
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     
-    rental_room = models.ForeignKey(RentalRoom, related_name='reviews', on_delete=models.CASCADE)
-    renter = models.ForeignKey(CustomUser, related_name='reviews', on_delete=models.CASCADE)
+    rental_room = models.ForeignKey(RentalRoom, related_name='reviews', on_delete=models.PROTECT)
+    renter = models.ForeignKey(CustomUser, related_name='reviews', on_delete=models.PROTECT)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

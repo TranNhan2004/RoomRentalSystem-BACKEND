@@ -8,14 +8,15 @@ from apps.rental_room.models import RentalRoom
 # -----------------------------------------------------------
 def contract_document_upload_to(instance, filename):
     return upload_to_fn(
-        folders_path=['contracts', f'docs-of-contract-{instance.id}'],
-        filename=filename
+        folders_path='',
+        filename=filename,
+        instance=instance
     )
     
 class Contract(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     document = models.FileField(upload_to=contract_document_upload_to)
-    rental_room = models.ForeignKey(RentalRoom, related_name='contracts', on_delete=models.CASCADE)
+    rental_room = models.ForeignKey(RentalRoom, related_name='contracts', on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     
     
@@ -25,8 +26,8 @@ class RentalContract(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     
-    contract = models.ForeignKey(Contract, related_name='rented_contracts', on_delete=models.CASCADE)
-    renter = models.ForeignKey(CustomUser, related_name='rented_contracts', on_delete=models.CASCADE)
+    contract = models.ForeignKey(Contract, related_name='rented_contracts', on_delete=models.PROTECT)
+    renter = models.ForeignKey(CustomUser, related_name='rented_contracts', on_delete=models.PROTECT)
     
     created_at = models.DateTimeField(auto_now_add=True)
     

@@ -9,7 +9,7 @@ class SaveForLater(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     notes = models.CharField(max_length=512, null=True, blank=True)
     
-    rental_room = models.ForeignKey(RentalRoom, related_name='saved_items', on_delete=models.CASCADE)
-    renter = models.ForeignKey(CustomUser, related_name='saved_items', on_delete=models.CASCADE)
+    rental_room = models.ForeignKey(RentalRoom, related_name='saved_items', on_delete=models.PROTECT)
+    renter = models.ForeignKey(CustomUser, related_name='saved_items', on_delete=models.PROTECT)
     
     created_at = models.DateTimeField(auto_now_add=True)

@@ -49,7 +49,7 @@ class CustomUser(AbstractUser):
     workplace_commune = models.ForeignKey(
         Commune, 
         related_name='working_renters', 
-        on_delete=models.CASCADE, 
+        on_delete=models.PROTECT, 
         null=True, 
         blank=True
     )

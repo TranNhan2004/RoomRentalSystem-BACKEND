@@ -11,8 +11,8 @@ class Distance(models.Model):
     value = models.FloatField(validators=[MinValueValidator(0.0)], default=0.0)
     duration_in_minutes = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     
-    rental_room = models.ForeignKey(RentalRoom, related_name='distances', on_delete=models.CASCADE)
-    renter = models.ForeignKey(CustomUser, related_name='distances', on_delete=models.CASCADE)
+    rental_room = models.ForeignKey(RentalRoom, related_name='distances', on_delete=models.PROTECT)
+    renter = models.ForeignKey(CustomUser, related_name='distances', on_delete=models.PROTECT)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
