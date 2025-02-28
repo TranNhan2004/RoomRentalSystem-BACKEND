@@ -37,6 +37,11 @@ class DistrictViewSet(viewsets.ModelViewSet):
 class CommuneViewSet(viewsets.ModelViewSet):
     queryset = Commune.objects.all()
     serializer_class = CommuneSerializer
+    filterset_class = CommuneFilter
+    
+    def list(self, request, *args, **kwargs):
+        self.queryset = self.filter_queryset(self.queryset)
+        return super().list(request, *args, **kwargs)
     
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':
