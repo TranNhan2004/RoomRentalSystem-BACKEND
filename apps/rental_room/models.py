@@ -92,24 +92,24 @@ class ElectricityWaterChargesList(models.Model):
     rental_room = models.ForeignKey(RentalRoom, related_name='electricity_water_charges_list', on_delete=models.PROTECT)
     
     ELECTRICITY_CHARGE_TYPE_CHOICES = [
-        ('unit', '/kWh'),
-        ('person', '/người')
+        ('UNIT', '/kWh'),
+        ('PERSON', '/người')
     ]
     electricity_charge_type = models.CharField(
         max_length=8, 
         choices=ELECTRICITY_CHARGE_TYPE_CHOICES, 
-        default='unit'
+        default='UNIT'
     )
     electricity_charge = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     
     WATER_CHARGE_TYPE_CHOICES = [
-        ('unit', '/m3'),
-        ('person', '/người'),    
+        ('UNIT', '/m3'),
+        ('PERSON', '/người'),    
     ]
     water_charge_type = models.CharField(
         max_length=8, 
         choices=WATER_CHARGE_TYPE_CHOICES, 
-        default='unit'
+        default='UNIT'
     )
     water_charge = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     

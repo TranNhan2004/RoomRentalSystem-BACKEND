@@ -30,20 +30,20 @@ class CustomUser(AbstractUser):
     date_of_birth = models.DateField(null=True, blank=True)
     
     GENDER_CHOICES = [
-        ('M', 'Nam'),
-        ('F', 'Nữ'),
-        ('U', 'Không rõ')
+        ('MALE', 'Nam'),
+        ('FEMALE', 'Nữ'),
+        ('UNKNOWN', 'Không rõ')
     ]
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='MALE')
     avatar = models.ImageField(storage=S3Boto3Storage(), upload_to=user_avatar_upload_to, null=True, blank=True)
     
     ROLE_CHOICES = [
-        ('A', 'Quản trị viên'),
-        ('M', 'Quản lý'),
-        ('L', 'Người cho thuê'),
-        ('R', 'Người thuê')
+        ('ADMIN', 'Quản trị viên'),
+        ('MANAGER', 'Quản lý'),
+        ('LESSOR', 'Người cho thuê'),
+        ('RENTER', 'Người thuê')
     ]
-    role = models.CharField(max_length=1, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
     
     # For role == 'R'
     workplace_commune = models.ForeignKey(

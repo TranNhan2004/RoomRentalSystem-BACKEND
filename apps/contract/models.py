@@ -8,7 +8,7 @@ from apps.rental_room.models import RentalRoom
 # -----------------------------------------------------------
 def contract_document_upload_to(instance, filename):
     return upload_to_fn(
-        folders_path='',
+        folders_path=f'contracts/room-{instance.rental_room.id}',
         filename=filename,
         instance=instance
     )

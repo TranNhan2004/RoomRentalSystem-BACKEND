@@ -132,9 +132,8 @@ class ResetPasswordView(APIView):
 
 # -----------------------------------------------------------
 class ChangePasswordView(APIView):
-    def post(self, request, *args, **kwargs):
+    def patch(self, request, id):
         try:
-            id = request.data.get('id')
             user = get_user_model().objects.get(id=id)
         except get_user_model().DoesNotExist:
             return Response({"detail": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
@@ -152,16 +151,27 @@ class ChangePasswordView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        if old_password == new_password:
+            return Response(
+                {"detail": "Old password and new password cannot be the same"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
         user.set_password(new_password)
         user.save()
 
         return Response({"detail": "Password has been changed successfully"}, status=status.HTTP_200_OK)
 
 
-class HandleAvatar(APIView):
+# -----------------------------------------------------------
+class HandleAvatarView(APIView):
     def patch(self, request, *arg, **kwargs):
-        user = request.user
-        
+        try:
+            id = request.data.get('id')
+            user = get_user_model().objects.get(id=id)
+        except get_user_model().DoesNotExist:
+            return Response({"detail": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
         if 'avatar' in request.data:
             if user.avatar:
                 user.avatar.delete(save=False)
@@ -174,12 +184,58 @@ class HandleAvatar(APIView):
         return Response({"detail": "No avatar to update."}, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, *args, **kwargs):
-        user = request.user
+        try:
+            id = request.data.get('id')
+            user = get_user_model().objects.get(id=id)
+        except get_user_model().DoesNotExist:
+            return Response({"detail": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         
         if user.avatar:
             user.avatar.delete(save=False)  
             return Response({"detail": "Avatar has been deleted."}, status=status.HTTP_200_OK)
         
         return Response({"detail": "No avatar to delete."}, status=status.HTTP_404_NOT_FOUND)
-    
-    
+
+
+# -----------------------------------------------------------
+class SendEmailForChangeEmailView(APIView):
+    def patch(self, request):
+        user_email = request.data.get('email')
+        user = get_user_model().objects.get(email=user_email)
+        
+        if user:
+            return Response({"detail": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+        
+        try:
+            user = get_user_model().objects.get(email=user_email)
+        except get_user_model().DoesNotExist:
+            return Response({"detail": "Email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        uidb64 = urlsafe_base64_encode(str(user.id).encode())
+        token = default_token_generator.make_token(user)
+
+        role_to_idx = {
+            'M': 0,
+            'L': 1,
+            'R': 2
+        }        
+        reset_link = request.build_absolute_uri(reverse(
+            viewname='auth-reset-password-confirm', 
+            kwargs={'uidb64': uidb64, 'token': token}
+        ))
+        reset_link = reset_link.replace(
+            settings.BACKEND_URL_FOR_SEND_EMAIL,
+            settings.FRONTEND_URLS_REPLACE_FOR_SEND_EMAIL[role_to_idx[user.role]]
+        ) 
+
+        send_mail(
+            subject='ĐẶT LẠI MẬT KHẨU',
+            message=f'Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu: \n{reset_link}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user_email],
+            fail_silently=False,
+        )
+
+        return Response({"detail": "Your link to reset password has been sent"}, status=status.HTTP_200_OK)
