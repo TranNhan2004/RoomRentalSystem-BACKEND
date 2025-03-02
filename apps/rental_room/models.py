@@ -4,7 +4,6 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from backend_project.utils import upload_to_fn
 from apps.address.models import Commune
 from apps.user_account.models import CustomUser
-from storages.backends.s3boto3 import S3Boto3Storage
 
 
 # -----------------------------------------------------------
@@ -53,7 +52,7 @@ def rental_room_image_upload_to(instance, filename):
 class RentalRoomImage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     rental_room = models.ForeignKey(RentalRoom, related_name='images', on_delete=models.PROTECT)
-    image = models.ImageField(storage=S3Boto3Storage(), upload_to=rental_room_image_upload_to)
+    image = models.ImageField(upload_to=rental_room_image_upload_to)
     
     def delete(self, *args, **kwargs):
         if self.avatar:

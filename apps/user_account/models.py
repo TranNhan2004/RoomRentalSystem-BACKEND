@@ -3,7 +3,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 from backend_project.utils import upload_to_fn
 from apps.address.models import Commune
-from storages.backends.s3boto3 import S3Boto3Storage
 
 
 # -----------------------------------------------------------
@@ -35,7 +34,7 @@ class CustomUser(AbstractUser):
         ('UNKNOWN', 'Không rõ')
     ]
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='MALE')
-    avatar = models.ImageField(storage=S3Boto3Storage(), upload_to=user_avatar_upload_to, null=True, blank=True)
+    avatar = models.ImageField(upload_to=user_avatar_upload_to, null=True, blank=True)
     
     ROLE_CHOICES = [
         ('ADMIN', 'Quản trị viên'),

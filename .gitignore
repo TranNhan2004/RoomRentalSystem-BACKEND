@@ -4,6 +4,12 @@ venv/
 
 .env.*
 
+*/migrations/*
+!*/migrations/__init__.py
+!*/migrations/
+
+media/
+
 *.log
 *.pot
 *.py[cod]

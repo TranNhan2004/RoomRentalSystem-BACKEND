@@ -63,15 +63,6 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id'
 }
 
-# STORAGES = {
-#     "default": {
-#         "BACKEND": "storages.backends.s3.S3Storage",
-#     },
-#     "staticfiles": {
-#         "BACKEND": "storages.backends.s3.S3Storage",
-#     }
-# }
-
 # Application definition
 INSTALLED_APPS = [
     'corsheaders',
@@ -80,7 +71,6 @@ INSTALLED_APPS = [
     'apps.user_account',
     'apps.rental_room',
     'apps.contract',
-    'apps.chat',
     'apps.distance',
     'apps.review',
     'apps.save_for_later',
@@ -96,7 +86,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
 
     'django_filters',
-    'storages',
     'sslserver',
 ]
 
@@ -181,27 +170,10 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-# Thông tin AWS
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME') 
-AWS_S3_SIGNATURE_VERSION = 's3v4'
-AWS_DEFAULT_ACL = None
-AWS_S3_FILE_OVERWRITE = False
-AWS_S3_VERIFY = True
-
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
-
-AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=86400',  
-}
 
 STATIC_URL = 'static/'
-# MEDIA_URL = '/media/' 
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/' 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
