@@ -1,6 +1,6 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.conf import settings
 from django.urls import reverse
 from django.utils.timezone import now
@@ -13,6 +13,12 @@ from rest_framework.permissions import AllowAny
 
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from backend_project.email_bodies import (
+    get_active_account_email_body,
+    get_password_from_manager_register_email_body,
+    get_reset_password_email_body
+)
 
 from .models import CustomUser
 from .serializers import CustomUserSerializer, CustomTokenObtainPairSerializer
@@ -29,12 +35,15 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
     
     def partial_update(self, request, *args, **kwargs):
-        request.data.pop('password')
-        request.data.pop('avatar')
+        request.data.pop('id', None)
+        request.data.pop('password', None)
+        request.data.pop('avatar', None)
+        request.data.pop('created_at', None)
+        request.data.pop('updated_at', None)
+        request.data.pop('last_login', None)
         return super().partial_update(request, *args, **kwargs)
 
     
-
 # -----------------------------------------------------------
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -71,15 +80,15 @@ class SendEmailForResetPasswordView(APIView):
         try:
             user = get_user_model().objects.get(email=user_email)
         except get_user_model().DoesNotExist:
-            return Response({"detail": "Email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Email does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
         uidb64 = urlsafe_base64_encode(str(user.id).encode())
         token = default_token_generator.make_token(user)
 
         role_to_idx = {
-            'M': 0,
-            'L': 1,
-            'R': 2
+            'MANAGER': 0,
+            'LESSOR': 1,
+            'RENTER': 2
         }        
         reset_link = request.build_absolute_uri(reverse(
             viewname='auth-reset-password-confirm', 
@@ -90,13 +99,14 @@ class SendEmailForResetPasswordView(APIView):
             settings.FRONTEND_URLS_REPLACE_FOR_SEND_EMAIL[role_to_idx[user.role]]
         ) 
 
-        send_mail(
+        email = EmailMessage(
             subject='ĐẶT LẠI MẬT KHẨU',
-            message=f'Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu: \n{reset_link}',
+            body=get_reset_password_email_body(reset_link),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user_email],
-            fail_silently=False,
+            to=[user.email]
         )
+        email.content_subtype = 'html'
+        email.send()
 
         return Response({"detail": "Your link to reset password has been sent"}, status=status.HTTP_200_OK)
 
@@ -136,7 +146,7 @@ class ChangePasswordView(APIView):
         try:
             user = get_user_model().objects.get(id=id)
         except get_user_model().DoesNotExist:
-            return Response({"detail": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
         old_password = request.data.get('old_password')
         new_password = request.data.get('new_password')
@@ -165,12 +175,11 @@ class ChangePasswordView(APIView):
 
 # -----------------------------------------------------------
 class HandleAvatarView(APIView):
-    def patch(self, request, *arg, **kwargs):
+    def patch(self, request, id):
         try:
-            id = request.data.get('id')
             user = get_user_model().objects.get(id=id)
         except get_user_model().DoesNotExist:
-            return Response({"detail": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
         if 'avatar' in request.data:
             if user.avatar:
@@ -183,59 +192,14 @@ class HandleAvatarView(APIView):
         
         return Response({"detail": "No avatar to update."}, status=status.HTTP_400_BAD_REQUEST)
     
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request, id):
         try:
-            id = request.data.get('id')
             user = get_user_model().objects.get(id=id)
         except get_user_model().DoesNotExist:
-            return Response({"detail": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
         
         if user.avatar:
             user.avatar.delete(save=False)  
             return Response({"detail": "Avatar has been deleted."}, status=status.HTTP_200_OK)
         
         return Response({"detail": "No avatar to delete."}, status=status.HTTP_404_NOT_FOUND)
-
-
-# -----------------------------------------------------------
-class SendEmailForChangeEmailView(APIView):
-    def patch(self, request):
-        user_email = request.data.get('email')
-        user = get_user_model().objects.get(email=user_email)
-        
-        if user:
-            return Response({"detail": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        
-        
-        try:
-            user = get_user_model().objects.get(email=user_email)
-        except get_user_model().DoesNotExist:
-            return Response({"detail": "Email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-
-        uidb64 = urlsafe_base64_encode(str(user.id).encode())
-        token = default_token_generator.make_token(user)
-
-        role_to_idx = {
-            'M': 0,
-            'L': 1,
-            'R': 2
-        }        
-        reset_link = request.build_absolute_uri(reverse(
-            viewname='auth-reset-password-confirm', 
-            kwargs={'uidb64': uidb64, 'token': token}
-        ))
-        reset_link = reset_link.replace(
-            settings.BACKEND_URL_FOR_SEND_EMAIL,
-            settings.FRONTEND_URLS_REPLACE_FOR_SEND_EMAIL[role_to_idx[user.role]]
-        ) 
-
-        send_mail(
-            subject='ĐẶT LẠI MẬT KHẨU',
-            message=f'Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu: \n{reset_link}',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user_email],
-            fail_silently=False,
-        )
-
-        return Response({"detail": "Your link to reset password has been sent"}, status=status.HTTP_200_OK)

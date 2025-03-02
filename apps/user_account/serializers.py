@@ -1,5 +1,3 @@
-import json
-
 from rest_framework.serializers import ModelSerializer, ValidationError, PrimaryKeyRelatedField
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import CustomUser
@@ -8,7 +6,7 @@ from apps.address.models import Commune
 
 # -----------------------------------------------------------
 class CustomUserSerializer(ModelSerializer):
-    workplace_commune = PrimaryKeyRelatedField(queryset=Commune.objects.all(), required=False)
+    workplace_commune = PrimaryKeyRelatedField(queryset=Commune.objects.all(), required=False, allow_null=True)
     
     class Meta:
         model = CustomUser
@@ -33,16 +31,16 @@ class CustomUserSerializer(ModelSerializer):
         )
     
     def validate(self, data):
-        role = data.get('role', getattr(self.instance, 'role', None))
-        workplace_commune = data.get('workplace_commune')
-        workplace_additional_address = data.get('workplace_additional_address')
+        role = data.get('role', getattr(self.instance, 'role', None))    
         
-        if role != 'R':
+        if role != 'RENTER':
             data.pop('workplace_commune', None)
             data.pop('workplace_additional_address', None)
         else:
+            workplace_commune = data.get('workplace_commune')
+            workplace_additional_address = data.get('workplace_additional_address')
             if not workplace_commune or not workplace_additional_address:
-                raise ValidationError('Thông tin địa chỉ làm việc phải được nhập!')
+                raise ValidationError('Workplace infomation cannot be null.')
         
         return data
     
