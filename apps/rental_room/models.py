@@ -104,8 +104,11 @@ class MonthlyChargesDetails(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     room_code = models.ForeignKey(RoomCode, related_name='monthly_charges_details', on_delete=models.PROTECT)
     
-    kwhNumber = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    m3Number = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    old_kWh_reading = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    new_kWh_reading = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    
+    old_m3_reading = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    new_m3_reading = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
     prev_remaining_charges= models.IntegerField(default=0, validators=[MinValueValidator(0)])
     due_charges = models.IntegerField(default=0, validators=[MinValueValidator(0)])
@@ -113,6 +116,18 @@ class MonthlyChargesDetails(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(new_kWh_reading__lte=models.F('old_kWh_reading')),
+                name='__MONTHLY_CHARGES_DETAILS__new_kWh_reading__lte__old_kWh_reading'
+            ),
+            models.CheckConstraint(
+                check=models.Q(new_m3_reading__lte=models.F('old_m3_reading')),
+                name='__MONTHLY_CHARGES_DETAILS__new_m3_reading__lte__old_m3_reading'
+            )
+        ]
 
     
 # -----------------------------------------------------------
