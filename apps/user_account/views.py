@@ -22,12 +22,18 @@ from backend_project.email_bodies import (
 
 from .models import CustomUser
 from .serializers import CustomUserSerializer, CustomTokenObtainPairSerializer
-
+from .filters import CustomUserFilter
 
 # -----------------------------------------------------------
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
+    filterset_class = CustomUserFilter
+    
+    def list(self, request, *args, **kwargs):
+        self.queryset = self.filter_queryset(self.queryset)
+        print(f"Filtered queryset: {self.queryset}")
+        return super().list(request, *args, **kwargs)
     
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':
@@ -37,7 +43,6 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         request.data.pop('id', None)
         request.data.pop('password', None)
-        request.data.pop('avatar', None)
         request.data.pop('created_at', None)
         request.data.pop('updated_at', None)
         request.data.pop('last_login', None)
@@ -173,33 +178,4 @@ class ChangePasswordView(APIView):
         return Response({"detail": "Password has been changed successfully"}, status=status.HTTP_200_OK)
 
 
-# -----------------------------------------------------------
-class HandleAvatarView(APIView):
-    def patch(self, request, id):
-        try:
-            user = get_user_model().objects.get(id=id)
-        except get_user_model().DoesNotExist:
-            return Response({"detail": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-        if 'avatar' in request.data:
-            if user.avatar:
-                user.avatar.delete(save=False)
-            
-            user.avatar = request.data['avatar']
-            user.save() 
-
-            return Response({"detail": "Avatar has been updated."}, status=status.HTTP_200_OK)
-        
-        return Response({"detail": "No avatar to update."}, status=status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self, request, id):
-        try:
-            user = get_user_model().objects.get(id=id)
-        except get_user_model().DoesNotExist:
-            return Response({"detail": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
-        
-        if user.avatar:
-            user.avatar.delete(save=False)  
-            return Response({"detail": "Avatar has been deleted."}, status=status.HTTP_200_OK)
-        
-        return Response({"detail": "No avatar to delete."}, status=status.HTTP_404_NOT_FOUND)

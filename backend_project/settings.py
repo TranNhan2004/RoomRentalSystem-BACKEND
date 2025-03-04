@@ -70,10 +70,11 @@ INSTALLED_APPS = [
     'apps.address',
     'apps.user_account',
     'apps.rental_room',
-    'apps.contract',
     'apps.distance',
     'apps.review',
     'apps.save_for_later',
+    'apps.notification',
+    'apps.search_room_history',
     
     'django.contrib.admin',
     'django.contrib.auth',

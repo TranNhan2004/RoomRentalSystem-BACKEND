@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class ContractConfig(AppConfig):
+class SearchRoomHistoryConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.contract'
+    name = 'apps.search_room_history'

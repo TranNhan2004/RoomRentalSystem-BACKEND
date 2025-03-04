@@ -36,7 +36,6 @@ class Migration(migrations.Migration):
                 ('phone_number', models.CharField(max_length=10, unique=True)),
                 ('date_of_birth', models.DateField(blank=True, null=True)),
                 ('gender', models.CharField(choices=[('MALE', 'Nam'), ('FEMALE', 'Nữ'), ('UNKNOWN', 'Không rõ')], default='MALE', max_length=10)),
-                ('avatar', models.ImageField(blank=True, null=True, upload_to=apps.user_account.models.user_avatar_upload_to)),
                 ('role', models.CharField(choices=[('ADMIN', 'Quản trị viên'), ('MANAGER', 'Quản lý'), ('LESSOR', 'Người cho thuê'), ('RENTER', 'Người thuê')], max_length=10)),
                 ('workplace_additional_address', models.TextField(blank=True, max_length=512, null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),

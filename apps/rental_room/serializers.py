@@ -1,5 +1,12 @@
 from rest_framework.serializers import ModelSerializer, PrimaryKeyRelatedField
-from .models import RentalRoom, RentalRoomImage, RoomChargesList, ElectricityWaterChargesList, OtherChargesList
+from .models import (
+    RentalRoom, 
+    RentalRoomImage, 
+    RoomChargesList, 
+    ElectricityWaterChargesList, 
+    OtherChargesList,
+    MonitoringRental
+)
 from apps.address.models import Commune
 from apps.user_account.models import CustomUser
 
@@ -48,4 +55,14 @@ class OtherChargesListSerializer(ModelSerializer):
     
     class Meta:
         model = OtherChargesList
+        fields = '__all__'
+        
+
+# -----------------------------------------------------------
+class MonitoringRentalSerializer(ModelSerializer):
+    rental_room = PrimaryKeyRelatedField(queryset=RentalRoom.objects.all())
+    renter = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
+    
+    class Meta:
+        model = MonitoringRental
         fields = '__all__'

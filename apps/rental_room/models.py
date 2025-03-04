@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from backend_project.utils import upload_to_fn
+from backend_project.choices import ELECTRICITY_CHARGE_TYPE_CHOICES, WATER_CHARGE_TYPE_CHOICES
 from apps.address.models import Commune
 from apps.user_account.models import CustomUser
 
@@ -14,7 +15,7 @@ class RentalRoom(models.Model):
     commune = models.ForeignKey(Commune, related_name='rental_rooms', on_delete=models.PROTECT)
     additional_address = models.TextField(max_length=512)
     
-    closing_time = models.TimeField(null=True)
+    closing_time = models.TimeField(null=True, blank=True)
     
     max_occupancy_per_room = models.IntegerField(validators=[MinValueValidator(1)], default=1)
     
@@ -23,10 +24,10 @@ class RentalRoom(models.Model):
     
     average_rating = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(5)])
     
-    further_description = models.TextField(max_length=1024, blank=True, null=True)
+    further_description = models.TextField(max_length=1024, null=True, blank=True)
     
     lessor = models.ForeignKey(CustomUser, related_name='possessed_rooms', on_delete=models.PROTECT)
-    manager = models.ForeignKey(CustomUser, related_name='approved_rooms', on_delete=models.PROTECT, null=True)
+    manager = models.ForeignKey(CustomUser, related_name='approved_rooms', on_delete=models.PROTECT, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -69,8 +70,8 @@ class RoomChargesList(models.Model):
     room_charge = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     deposit = models.IntegerField(validators=[MinValueValidator(0)], default=0)
         
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
+    start_date = models.DateField()
+    end_date = models.DateField()
     
     class Meta:
         constraints = [
@@ -90,10 +91,6 @@ class ElectricityWaterChargesList(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     rental_room = models.ForeignKey(RentalRoom, related_name='electricity_water_charges_list', on_delete=models.PROTECT)
     
-    ELECTRICITY_CHARGE_TYPE_CHOICES = [
-        ('UNIT', '/kWh'),
-        ('PERSON', '/người')
-    ]
     electricity_charge_type = models.CharField(
         max_length=8, 
         choices=ELECTRICITY_CHARGE_TYPE_CHOICES, 
@@ -101,10 +98,6 @@ class ElectricityWaterChargesList(models.Model):
     )
     electricity_charge = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     
-    WATER_CHARGE_TYPE_CHOICES = [
-        ('UNIT', '/m3'),
-        ('PERSON', '/người'),    
-    ]
     water_charge_type = models.CharField(
         max_length=8, 
         choices=WATER_CHARGE_TYPE_CHOICES, 
@@ -112,8 +105,8 @@ class ElectricityWaterChargesList(models.Model):
     )
     water_charge = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
+    start_date = models.DateField()
+    end_date = models.DateField()
     
     class Meta:
         constraints = [
@@ -132,8 +125,8 @@ class OtherChargesList(models.Model):
     wifi_charge = models.IntegerField(validators=[MinValueValidator(0)], null=True)
     rubbish_charge = models.IntegerField(validators=[MinValueValidator(0)])
     
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
+    start_date = models.DateField()
+    end_date = models.DateField()
     
     class Meta:
         constraints = [
@@ -142,3 +135,18 @@ class OtherChargesList(models.Model):
                 name='__OTHER_CHARGES_LIST__end_date__gt__start_date'
             )
         ]
+
+
+# -----------------------------------------------------------
+class MonitoringRental(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    rental_room = models.ForeignKey(RentalRoom, related_name='monitoring_rentals', on_delete=models.PROTECT)
+    renter = models.ForeignKey(CustomUser, related_name='rented_room', on_delete=models.PROTECT)
+    room_code = models.CharField(max_length=20)
+        
+    remaining_charges_prev_month = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    due_charges_in_month = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    paid_charges_in_month = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    
+    start_date = models.DateField()
+    end_date = models.DateField()

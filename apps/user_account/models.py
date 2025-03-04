@@ -1,7 +1,9 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
+from django.core.validators import MinValueValidator
 from backend_project.utils import upload_to_fn
+from backend_project.choices import GENDER_CHOICES, ROLE_CHOICES
 from apps.address.models import Commune
 
 
@@ -16,9 +18,6 @@ class CustomUserManager(UserManager):
     
     
 # -----------------------------------------------------------
-def user_avatar_upload_to(instance, filename):
-    return upload_to_fn(folder_path='avatars', filename=filename, instance=instance)
-    
 class CustomUser(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(max_length=128, unique=True)
@@ -28,21 +27,10 @@ class CustomUser(AbstractUser):
     phone_number = models.CharField(max_length=10, unique=True)
     date_of_birth = models.DateField(null=True, blank=True)
     
-    GENDER_CHOICES = [
-        ('MALE', 'Nam'),
-        ('FEMALE', 'Nữ'),
-        ('UNKNOWN', 'Không rõ')
-    ]
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='MALE')
-    avatar = models.ImageField(upload_to=user_avatar_upload_to, null=True, blank=True)
     
-    ROLE_CHOICES = [
-        ('ADMIN', 'Quản trị viên'),
-        ('MANAGER', 'Quản lý'),
-        ('LESSOR', 'Người cho thuê'),
-        ('RENTER', 'Người thuê')
-    ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    account_balance = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
     # For role == 'R'
     workplace_commune = models.ForeignKey(
@@ -69,12 +57,6 @@ class CustomUser(AbstractUser):
         if self.password and not self.password.startswith('pbkdf2_sha256$'):
             self.set_password(self.password)
         super().save(*args, **kwargs)
-        
-    def delete(self, *args, **kwargs):
-        if self.avatar:
-            self.avatar.delete(save=False)  
-
-        super(CustomUser, self).delete(*args, **kwargs)
     
     def __str__(self):
         return self.email

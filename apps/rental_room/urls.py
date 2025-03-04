@@ -5,7 +5,8 @@ from .views import (
     RentalRoomImageViewSet,
     RoomChargesListViewSet,
     ElectricityWaterChargesListViewSet,
-    OtherChargesListViewSet
+    OtherChargesListViewSet,
+    MonitoringRentalViewSet
 )
 
 router = routers.DefaultRouter()
@@ -18,6 +19,7 @@ router.register(
     basename='electricity-water-charges-list'
 )
 router.register(r'other-charges-lists', OtherChargesListViewSet, basename='other-charges-list')
+router.register(r'monitoring-rentals', MonitoringRentalViewSet, basename='monitoring-rental')
 
 urlpatterns = [
     path('', include(router.urls)),

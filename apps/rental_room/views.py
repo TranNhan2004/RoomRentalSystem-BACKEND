@@ -1,12 +1,20 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from .models import RentalRoom, RentalRoomImage, RoomChargesList, ElectricityWaterChargesList, OtherChargesList
+from .models import (
+    RentalRoom, 
+    RentalRoomImage, 
+    RoomChargesList, 
+    ElectricityWaterChargesList, 
+    OtherChargesList,
+    MonitoringRental
+)
 from .serializers import (
     RentalRoomSerializer, 
     RentalRoomImageSerializer,
     RoomChargesListSerializer,
     ElectricityWaterChargesListSerializer,
-    OtherChargesListSerializer
+    OtherChargesListSerializer,
+    MonitoringRentalSerializer
 )
 
 
@@ -58,6 +66,17 @@ class ElectricityWaterChargesListViewSet(viewsets.ModelViewSet):
 class OtherChargesListViewSet(viewsets.ModelViewSet):
     queryset = OtherChargesList.objects.all()
     serializer_class = OtherChargesListSerializer  
+    
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
+
+
+# -----------------------------------------------------------
+class MonitoringRentalViewSet(viewsets.ModelViewSet):
+    queryset = MonitoringRental.objects.all()
+    serializer_class = MonitoringRentalSerializer  
     
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':

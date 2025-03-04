@@ -14,7 +14,7 @@ def get_reset_password_email_body(reset_link: str):
         <b>LƯU Ý:</b> Đây là email tự động, vui lòng không trả lời lại email này.<br /><br />
 
         Trân trọng,<br />  
-        <b>Room Rental Company</b>
+        <b>Room Rental Support</b>
     """)
 
     
@@ -34,7 +34,7 @@ def get_active_account_email_body(reset_link: str):
         <b>LƯU Ý:</b> Đây là email tự động, vui lòng không trả lời lại email này.<br /><br />
 
         Trân trọng,<br /> 
-        <b>Room Rental Company</b>
+        <b>Room Rental Support</b>
     """)
     
 
@@ -56,5 +56,5 @@ def get_password_from_manager_register_email_body(temp_password: str):
         <b>LƯU Ý:</b> Đây là email tự động, vui lòng không trả lời lại email này.<br /><br />
 
         Trân trọng,<br />  
-        <b>Room Rental Company</b>
+        <b>Room Rental Support</b>
     """)
