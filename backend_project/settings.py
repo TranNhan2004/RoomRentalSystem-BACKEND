@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'apps.review',
     'apps.save_for_later',
     'apps.search_room_history',
+    'apps.recommendation',
     
     'django.contrib.admin',
     'django.contrib.auth',
