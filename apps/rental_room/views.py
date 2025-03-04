@@ -3,17 +3,17 @@ from rest_framework.response import Response
 from .models import (
     RentalRoom, 
     RentalRoomImage, 
-    RoomChargesList, 
-    ElectricityWaterChargesList, 
-    OtherChargesList,
+    ChargesList, 
+    RoomCode,
+    MonthlyChargesDetails,
     MonitoringRental
 )
 from .serializers import (
     RentalRoomSerializer, 
     RentalRoomImageSerializer,
-    RoomChargesListSerializer,
-    ElectricityWaterChargesListSerializer,
-    OtherChargesListSerializer,
+    ChargesListSerializer,
+    RoomCodeSerializer,
+    MonthlyChargesDetailsSerializer,
     MonitoringRentalSerializer
 )
 
@@ -41,9 +41,9 @@ class RentalRoomImageViewSet(viewsets.ModelViewSet):
     
 
 # -----------------------------------------------------------
-class RoomChargesListViewSet(viewsets.ModelViewSet):
-    queryset = RoomChargesList.objects.all()
-    serializer_class = RoomChargesListSerializer
+class ChargesListViewSet(viewsets.ModelViewSet):
+    queryset = ChargesList.objects.all()
+    serializer_class = ChargesListSerializer
     
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':
@@ -52,9 +52,9 @@ class RoomChargesListViewSet(viewsets.ModelViewSet):
 
 
 # -----------------------------------------------------------
-class ElectricityWaterChargesListViewSet(viewsets.ModelViewSet):
-    queryset = ElectricityWaterChargesList.objects.all()
-    serializer_class = ElectricityWaterChargesListSerializer
+class RoomCodeViewSet(viewsets.ModelViewSet):
+    queryset = RoomCode.objects.all()
+    serializer_class = RoomCodeSerializer  
     
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':
@@ -63,16 +63,16 @@ class ElectricityWaterChargesListViewSet(viewsets.ModelViewSet):
     
 
 # -----------------------------------------------------------
-class OtherChargesListViewSet(viewsets.ModelViewSet):
-    queryset = OtherChargesList.objects.all()
-    serializer_class = OtherChargesListSerializer  
+class MonthlyChargesDetailsViewSet(viewsets.ModelViewSet):
+    queryset = MonthlyChargesDetails.objects.all()
+    serializer_class = MonthlyChargesDetailsSerializer  
     
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
         return super().update(request, *args, **kwargs)
-
-
+    
+    
 # -----------------------------------------------------------
 class MonitoringRentalViewSet(viewsets.ModelViewSet):
     queryset = MonitoringRental.objects.all()

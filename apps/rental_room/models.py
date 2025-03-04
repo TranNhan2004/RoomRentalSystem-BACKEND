@@ -2,7 +2,6 @@ import uuid
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from backend_project.utils import upload_to_fn
-from backend_project.choices import ELECTRICITY_CHARGE_TYPE_CHOICES, WATER_CHARGE_TYPE_CHOICES
 from apps.address.models import Commune
 from apps.user_account.models import CustomUser
 
@@ -63,90 +62,72 @@ class RentalRoomImage(models.Model):
 
 
 # -----------------------------------------------------------
-class RoomChargesList(models.Model):
+class ChargesList(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    rental_room = models.ForeignKey(RentalRoom, related_name='room_charges_list', on_delete=models.PROTECT)
+    rental_room = models.ForeignKey(RentalRoom, related_name='charges_lists', on_delete=models.PROTECT)
     
-    room_charge = models.IntegerField(validators=[MinValueValidator(0)], default=0)
-    deposit = models.IntegerField(validators=[MinValueValidator(0)], default=0)
+    room_charge = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    deposit = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    
+    electricity_charge = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    water_charge = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    
+    wifi_charge = models.IntegerField(default=-1, validators=[MinValueValidator(-1)])
+    rubbish_charge = models.IntegerField(default=0, validators=[MinValueValidator(0)])
         
     start_date = models.DateField()
-    end_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
     
     class Meta:
         constraints = [
             models.CheckConstraint(
                 check=models.Q(deposit__lte=models.F('room_charge')),
-                name='__ROOM_CHARGES_LIST__deposit__lte__room_charge'
+                name='__CHARGES_LIST__deposit__lte__room_charge'
             ),
             models.CheckConstraint(
-                check=models.Q(end_date__gt=models.F('start_date')),
-                name='__ROOM_CHARGES_LIST__end_date__gt__start_date'
+                check=models.Q(end_date__gt=models.F('start_date')) | models.Q(end_date__isnull=True),
+                name='__CHARGES_LIST__end_date__gt__start_date'
             )
+
         ]
 
 
 # -----------------------------------------------------------
-class ElectricityWaterChargesList(models.Model):
+class RoomCode(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    rental_room = models.ForeignKey(RentalRoom, related_name='electricity_water_charges_list', on_delete=models.PROTECT)
-    
-    electricity_charge_type = models.CharField(
-        max_length=8, 
-        choices=ELECTRICITY_CHARGE_TYPE_CHOICES, 
-        default='UNIT'
-    )
-    electricity_charge = models.IntegerField(validators=[MinValueValidator(0)], default=0)
-    
-    water_charge_type = models.CharField(
-        max_length=8, 
-        choices=WATER_CHARGE_TYPE_CHOICES, 
-        default='UNIT'
-    )
-    water_charge = models.IntegerField(validators=[MinValueValidator(0)], default=0)
-    
-    start_date = models.DateField()
-    end_date = models.DateField()
-    
-    class Meta:
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(end_date__gt=models.F('start_date')),
-                name='__ELECTRICITY_WATER_CHARGES_LIST__end_date__gt__start_date'
-            )
-        ]
-    
+    rental_room = models.ForeignKey(RentalRoom, related_name='room_codes', on_delete=models.PROTECT)
+    value = models.CharField(max_length=10)
+
 
 # -----------------------------------------------------------
-class OtherChargesList(models.Model):
+class MonthlyChargesDetails(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    rental_room = models.ForeignKey(RentalRoom, related_name='other_charges_list', on_delete=models.PROTECT)
+    room_code = models.ForeignKey(RoomCode, related_name='monthly_charges_details', on_delete=models.PROTECT)
     
-    wifi_charge = models.IntegerField(validators=[MinValueValidator(0)], null=True)
-    rubbish_charge = models.IntegerField(validators=[MinValueValidator(0)])
+    kwhNumber = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    m3Number = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
-    start_date = models.DateField()
-    end_date = models.DateField()
+    prev_remaining_charges= models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    due_charges = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    paid_charges = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
-    class Meta:
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(end_date__gt=models.F('start_date')),
-                name='__OTHER_CHARGES_LIST__end_date__gt__start_date'
-            )
-        ]
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-
+    
 # -----------------------------------------------------------
 class MonitoringRental(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    rental_room = models.ForeignKey(RentalRoom, related_name='monitoring_rentals', on_delete=models.PROTECT)
+    room_code = models.ForeignKey(RoomCode, related_name='monitoring_rentals', on_delete=models.PROTECT)
     renter = models.ForeignKey(CustomUser, related_name='rented_room', on_delete=models.PROTECT)
-    room_code = models.CharField(max_length=20)
         
-    remaining_charges_prev_month = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    due_charges_in_month = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    paid_charges_in_month = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    
     start_date = models.DateField()
-    end_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(end_date__gt=models.F('start_date')) | models.Q(end_date__isnull=True),
+                name='__MONITORING_RENTAL__end_date__gt__start_date'
+            )
+        ]

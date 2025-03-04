@@ -3,22 +3,18 @@ from rest_framework import routers
 from .views import (
     RentalRoomViewSet, 
     RentalRoomImageViewSet,
-    RoomChargesListViewSet,
-    ElectricityWaterChargesListViewSet,
-    OtherChargesListViewSet,
+    ChargesListViewSet,
+    RoomCodeViewSet,
+    MonthlyChargesDetailsViewSet,
     MonitoringRentalViewSet
 )
 
 router = routers.DefaultRouter()
 router.register(r'rental-rooms', RentalRoomViewSet, basename='rental-room')
 router.register(r'rental-room-images', RentalRoomImageViewSet, basename='rental-room-image')
-router.register(r'room-charges-lists', RoomChargesListViewSet, basename='room-charges-list')
-router.register(
-    r'electricity-water-charges-lists', 
-    ElectricityWaterChargesListViewSet, 
-    basename='electricity-water-charges-list'
-)
-router.register(r'other-charges-lists', OtherChargesListViewSet, basename='other-charges-list')
+router.register(r'charges-lists', ChargesListViewSet, basename='charges-list')
+router.register(r'room-codes', RoomCodeViewSet, basename='room-code')
+router.register(r'monthly-charges-details', MonthlyChargesDetailsViewSet, basename='monthly-charges-details')
 router.register(r'monitoring-rentals', MonitoringRentalViewSet, basename='monitoring-rental')
 
 urlpatterns = [

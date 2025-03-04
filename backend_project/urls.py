@@ -9,6 +9,5 @@ urlpatterns = [
     path('api/app.distance/', include('apps.distance.urls')),   
     path('api/app.review/', include('apps.review.urls')),   
     path('api/app.save-for-later/', include('apps.save_for_later.urls')), 
-    path('api/app.notification/', include('apps.notifications.urls')),
     path('api/app.search-room-history/', include('apps.search_room_history.urls'))  
 ]

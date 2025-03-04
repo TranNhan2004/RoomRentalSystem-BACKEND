@@ -1,10 +1,18 @@
 from django.contrib import admin
 
-from .models import RentalRoom, RentalRoomImage, RoomChargesList, ElectricityWaterChargesList, OtherChargesList
+from .models import (
+    RentalRoom,
+    RentalRoomImage,
+    ChargesList,
+    RoomCode,
+    MonthlyChargesDetails,
+    MonitoringRental
+)
 
 
 admin.site.register(RentalRoom)
 admin.site.register(RentalRoomImage)
-admin.site.register(RoomChargesList)
-admin.site.register(ElectricityWaterChargesList)
-admin.site.register(OtherChargesList)
+admin.site.register(ChargesList)
+admin.site.register(RoomCode)
+admin.site.register(MonthlyChargesDetails)
+admin.site.register(MonitoringRental)

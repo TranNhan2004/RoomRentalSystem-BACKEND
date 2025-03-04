@@ -2,9 +2,9 @@ from rest_framework.serializers import ModelSerializer, PrimaryKeyRelatedField
 from .models import (
     RentalRoom, 
     RentalRoomImage, 
-    RoomChargesList, 
-    ElectricityWaterChargesList, 
-    OtherChargesList,
+    ChargesList,
+    RoomCode,
+    MonthlyChargesDetails,
     MonitoringRental
 )
 from apps.address.models import Commune
@@ -32,35 +32,35 @@ class RentalRoomImageSerializer(ModelSerializer):
 
 
 # -----------------------------------------------------------
-class RoomChargesListSerializer(ModelSerializer):
+class ChargesListSerializer(ModelSerializer):
     rental_room = PrimaryKeyRelatedField(queryset=RentalRoom.objects.all())
     
     class Meta:
-        model = RoomChargesList
+        model = ChargesList
         fields = '__all__'
         
 
 # -----------------------------------------------------------
-class ElectricityWaterChargesListSerializer(ModelSerializer):
+class RoomCodeSerializer(ModelSerializer):
     rental_room = PrimaryKeyRelatedField(queryset=RentalRoom.objects.all())
     
     class Meta:
-        model = ElectricityWaterChargesList
+        model = RoomCode
         fields = '__all__'
 
 
 # -----------------------------------------------------------
-class OtherChargesListSerializer(ModelSerializer):
+class MonthlyChargesDetailsSerializer(ModelSerializer):
     rental_room = PrimaryKeyRelatedField(queryset=RentalRoom.objects.all())
     
     class Meta:
-        model = OtherChargesList
+        model = MonthlyChargesDetails
         fields = '__all__'
         
-
+        
 # -----------------------------------------------------------
 class MonitoringRentalSerializer(ModelSerializer):
-    rental_room = PrimaryKeyRelatedField(queryset=RentalRoom.objects.all())
+    room_code = PrimaryKeyRelatedField(queryset=RentalRoom.objects.all())
     renter = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
     
     class Meta:

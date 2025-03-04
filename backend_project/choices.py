@@ -10,13 +10,3 @@ ROLE_CHOICES = [
     ('LESSOR', 'Chủ trọ'),
     ('RENTER', 'Người thuê')
 ]
-
-ELECTRICITY_CHARGE_TYPE_CHOICES = [
-    ('UNIT', '/kWh'),
-    ('PERSON', '/người')
-]
-
-WATER_CHARGE_TYPE_CHOICES = [
-    ('UNIT', '/m3'),
-    ('PERSON', '/người'),    
-]

@@ -73,7 +73,6 @@ INSTALLED_APPS = [
     'apps.distance',
     'apps.review',
     'apps.save_for_later',
-    'apps.notification',
     'apps.search_room_history',
     
     'django.contrib.admin',
