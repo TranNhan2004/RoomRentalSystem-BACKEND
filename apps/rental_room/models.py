@@ -13,6 +13,8 @@ class RentalRoom(models.Model):
     
     commune = models.ForeignKey(Commune, related_name='rental_rooms', on_delete=models.PROTECT)
     additional_address = models.TextField(max_length=512)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     
     closing_time = models.TimeField(null=True, blank=True)
     

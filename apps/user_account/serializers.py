@@ -20,7 +20,6 @@ class CustomUserSerializer(ModelSerializer):
             'phone_number',
             'date_of_birth',
             'gender',
-            'account_balance',
             'workplace_commune',
             'workplace_additional_address',
             'role',

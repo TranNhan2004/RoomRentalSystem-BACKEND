@@ -30,7 +30,6 @@ class CustomUser(AbstractUser):
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='MALE')
     
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
-    account_balance = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
     # For role == 'R'
     workplace_commune = models.ForeignKey(
@@ -41,6 +40,8 @@ class CustomUser(AbstractUser):
         blank=True
     )
     workplace_additional_address = models.TextField(max_length=512, null=True, blank=True)
+    workplace_latitude = models.FloatField(null=True, blank=True)
+    workplace_longitude = models.FloatField(null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
