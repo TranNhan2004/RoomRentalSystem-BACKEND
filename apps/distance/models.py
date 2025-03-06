@@ -16,3 +16,11 @@ class Distance(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['rental_room', 'renter'], 
+                name='__DISTANCE__rental_room_renter__unique_together'
+            ),
+        ]

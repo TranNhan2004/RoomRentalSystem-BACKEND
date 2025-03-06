@@ -13,3 +13,11 @@ class SaveForLater(models.Model):
     renter = models.ForeignKey(CustomUser, related_name='saved_items', on_delete=models.PROTECT)
     
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['rental_room', 'renter'], 
+                name='__SAVE_FOR_LATER__rental_room_renter__unique_together'
+            ),
+        ]

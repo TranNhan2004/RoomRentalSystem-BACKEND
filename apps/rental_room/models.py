@@ -116,6 +116,8 @@ class MonthlyChargesDetails(models.Model):
     due_charges = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     paid_charges = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
+    is_settled = models.BooleanField(default=False)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
