@@ -41,7 +41,7 @@ class CustomUserSerializer(ModelSerializer):
             if not workplace_commune or not workplace_additional_address:
                 raise ValidationError('Workplace infomation cannot be null.')
         
-        return data
+        return super().validate(data)
     
     def to_representation(self, instance):
         representation = super().to_representation(instance)

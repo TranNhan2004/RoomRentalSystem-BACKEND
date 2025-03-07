@@ -30,7 +30,7 @@ def get_text_without_accents(text: str) -> str:
     return unidecode(text)
 
 def get_lat_and_lng(address: str):
-    API_KEY = '8E0DAHQ3tcoK7aawVavHxYtwnrdGrGA0RBcTto5S'
+    API_KEY = ''
     
     encode_address = quote(get_text_without_accents(address))
     print(encode_address)

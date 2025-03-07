@@ -29,7 +29,7 @@ class CustomUser(AbstractUser):
     
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='MALE')
     
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='RENTER')
     
     # For role == 'R'
     workplace_commune = models.ForeignKey(
@@ -52,8 +52,7 @@ class CustomUser(AbstractUser):
     objects = CustomUserManager()
 
     def save(self, *args, **kwargs):
-        if not self.username:
-            self.username = self.email
+        self.username = self.email
 
         if self.password and not self.password.startswith('pbkdf2_sha256$'):
             self.set_password(self.password)

@@ -15,8 +15,7 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from backend_project.email_bodies import (
-    get_active_account_email_body,
-    get_password_from_manager_register_email_body,
+    get_activate_account_email_body,
     get_reset_password_email_body
 )
 
@@ -29,6 +28,9 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
     filterset_class = CustomUserFilter
+    
+    def post(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
     def list(self, request, *args, **kwargs):
         self.queryset = self.filter_queryset(self.queryset)
@@ -94,7 +96,11 @@ class SendEmailForResetPasswordView(APIView):
             'MANAGER': 0,
             'LESSOR': 1,
             'RENTER': 2
-        }        
+        }
+        if user.role not in role_to_idx:
+            return Response({"error": "Invalid role"}, status=status.HTTP_400_BAD_REQUEST)
+
+                
         reset_link = request.build_absolute_uri(reverse(
             viewname='auth-reset-password-confirm', 
             kwargs={'uidb64': uidb64, 'token': token}
@@ -104,14 +110,17 @@ class SendEmailForResetPasswordView(APIView):
             settings.FRONTEND_URLS_REPLACE_FOR_SEND_EMAIL[role_to_idx[user.role]]
         ) 
 
-        email = EmailMessage(
-            subject='ĐẶT LẠI MẬT KHẨU',
-            body=get_reset_password_email_body(reset_link),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[user.email]
-        )
-        email.content_subtype = 'html'
-        email.send()
+        try:
+            email = EmailMessage(
+                subject='ĐẶT LẠI MẬT KHẨU',
+                body=get_reset_password_email_body(reset_link),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email]
+            )
+            email.content_subtype = 'html'
+            email.send()
+        except Exception as e:
+            return Response({"error": f"Failed to send email: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"detail": "Your link to reset password has been sent"}, status=status.HTTP_200_OK)
 
@@ -178,4 +187,73 @@ class ChangePasswordView(APIView):
         return Response({"detail": "Password has been changed successfully"}, status=status.HTTP_200_OK)
 
 
+# -----------------------------------------------------------
+class SendEmailForRegisterView(APIView):
+    permission_classes = [AllowAny]  
+    serializer_class = CustomUserSerializer
 
+    def post(self, request):
+        data = request.data.copy()  
+        data['is_active'] = False  
+
+        serializer = self.serializer_class(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        user = serializer.save()
+        
+        uidb64 = urlsafe_base64_encode(str(user.id).encode())
+        token = default_token_generator.make_token(user)
+
+        role_to_idx = {
+            'LESSOR': 1, 
+            'RENTER': 2
+        }
+        if user.role not in role_to_idx:
+            return Response({"error": "Invalid role"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        activate_link = request.build_absolute_uri(reverse(
+            viewname='auth-activate-account', 
+            kwargs={'uidb64': uidb64, 'token': token}
+        ))
+        activate_link = activate_link.replace(
+            settings.BACKEND_URL_FOR_SEND_EMAIL,
+            settings.FRONTEND_URLS_REPLACE_FOR_SEND_EMAIL[role_to_idx[user.role]]
+        )
+
+        try:
+            email = EmailMessage(
+                subject='KÍCH HOẠT TÀI KHOẢN',
+                body=get_activate_account_email_body(activate_link),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email]
+            )
+            email.content_subtype = 'html'
+            email.send()
+        except Exception as e:
+            return Response({"error": f"Failed to send email: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({"detail": "Your link to activate account has been sent"}, status=status.HTTP_200_OK)
+
+
+# -----------------------------------------------------------
+class RegisterView(APIView):
+    permission_classes = [AllowAny]  
+
+    def post(self, request, uidb64, token):
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = get_user_model().objects.get(id=uid)
+        except (ValueError, get_user_model().DoesNotExist):
+            return Response({"detail": "Token is not valid"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({"detail": "Token is not valid or expired"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if user.is_active:
+            return Response({"detail": "Your account is already activated"}, status=status.HTTP_200_OK)
+
+        user.is_active = True
+        user.save()
+
+        return Response({"detail": "Your account has been activated successfully"}, status=status.HTTP_200_OK)
