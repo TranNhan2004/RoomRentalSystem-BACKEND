@@ -1,8 +1,6 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
-from django.core.validators import MinValueValidator
-from backend_project.utils import upload_to_fn
 from backend_project.choices import GENDER_CHOICES, ROLE_CHOICES
 from apps.address.models import Commune
 

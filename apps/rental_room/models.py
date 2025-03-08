@@ -23,16 +23,18 @@ class RentalRoom(models.Model):
     total_number = models.IntegerField(validators=[MinValueValidator(1)], default=1)
     empty_number = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     
-    average_rating = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(5)])
+    average_rating = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(5)], default=0)
     
     further_description = models.TextField(max_length=1024, null=True, blank=True)
     
     lessor = models.ForeignKey(CustomUser, related_name='possessed_rooms', on_delete=models.PROTECT)
     manager = models.ForeignKey(CustomUser, related_name='approved_rooms', on_delete=models.PROTECT, null=True, blank=True)
-    is_active = models.BooleanField(default=False)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.name
     
     class Meta:
         constraints = [
@@ -46,7 +48,7 @@ class RentalRoom(models.Model):
 # -----------------------------------------------------------
 def rental_room_image_upload_to(instance, filename):
     return upload_to_fn(
-        folders_path=f'rental-rooms-images/room-{instance.rental_room.id}',
+        folder_path=f'rental-rooms-images/room-{instance.rental_room.id}',
         filename=filename,
         instance=instance
     )

@@ -81,7 +81,7 @@ class CustomTokenRefreshView(TokenRefreshView):
 class SendEmailForResetPasswordView(APIView):
     permission_classes = [AllowAny]  
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         user_email = request.data.get('email')
         
         try:
@@ -190,13 +190,18 @@ class ChangePasswordView(APIView):
 # -----------------------------------------------------------
 class SendEmailForRegisterView(APIView):
     permission_classes = [AllowAny]  
-    serializer_class = CustomUserSerializer
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         data = request.data.copy()  
         data['is_active'] = False  
+        
+        if data.get('password') != data.get('confirm_password'):
+            return Response(
+                {"detail": "Confirm new password does not match with new password"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        serializer = self.serializer_class(data=data)
+        serializer = CustomUserSerializer(data=data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

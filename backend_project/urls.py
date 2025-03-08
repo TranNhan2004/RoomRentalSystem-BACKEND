@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
@@ -11,4 +13,4 @@ urlpatterns = [
     path('api/app.save-for-later/', include('apps.save_for_later.urls')), 
     path('api/app.search-room-history/', include('apps.search_room_history.urls')),
     path('api/app.recommendation', include('apps.recommendation.urls'))
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
