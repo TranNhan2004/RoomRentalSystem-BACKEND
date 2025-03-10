@@ -1,3 +1,4 @@
+from datetime import date
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -67,7 +68,16 @@ class RentalRoomImageViewSet(viewsets.ModelViewSet):
         return permissions
     
     def list(self, request, *args, **kwargs):
+        mode = request.query_params.get('mode', '').lower()
         self.queryset = self.filter_queryset(self.queryset)
+        
+        if mode == 'first':
+            first_data = self.queryset.first()
+            if first_data:
+                serializer = self.get_serializer(first_data)
+                return Response([serializer.data], status=status.HTTP_200_OK)
+            return Response([], status=status.HTTP_200_OK)
+        
         return super().list(request, *args, **kwargs)
     
     def update(self, request, *args, **kwargs):
@@ -91,7 +101,27 @@ class ChargesListViewSet(viewsets.ModelViewSet):
         return permissions
     
     def list(self, request, *args, **kwargs):
+        mode = request.query_params.get('mode', '').lower()
+        today = date.today()
+        
         self.queryset = self.filter_queryset(self.queryset)
+
+        if mode == 'first':
+            filtered_queryset = self.queryset.filter(
+                start_date__lte=today
+            ).filter(
+                end_date__isnull=True
+            ) | self.queryset.filter(
+                start_date__lte=today,
+                end_date__gte=today
+            )
+
+            first_data = filtered_queryset.order_by('start_date').first()  
+            if first_data:
+                serializer = self.get_serializer(first_data)
+                return Response([serializer.data], status=status.HTTP_200_OK)    
+            return Response([], status=status.HTTP_200_OK)
+        
         return super().list(request, *args, **kwargs)
     
     def update(self, request, *args, **kwargs):

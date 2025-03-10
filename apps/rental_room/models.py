@@ -114,7 +114,7 @@ class MonthlyChargesDetails(models.Model):
     old_m3_reading = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     new_m3_reading = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
-    prev_remaining_charges= models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    prev_remaining_charges = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     due_charges = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     paid_charges = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
