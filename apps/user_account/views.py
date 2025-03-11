@@ -34,7 +34,6 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     
     def list(self, request, *args, **kwargs):
         self.queryset = self.filter_queryset(self.queryset)
-        print(f"Filtered queryset: {self.queryset}")
         return super().list(request, *args, **kwargs)
     
     def update(self, request, *args, **kwargs):

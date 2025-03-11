@@ -45,8 +45,8 @@ def get_lat_and_lng(address: str):
 
 
 
-def get_distance(lat_source, lng_source, lat_destination, lng_destination):
-    API_KEY = '8E0DAHQ3tcoK7aawVavHxYtwnrdGrGA0RBcTto5S'
+def get_distance_value(lat_source, lng_source, lat_destination, lng_destination):
+    API_KEY = ''
     
     response = requests.get(f"https://rsapi.goong.io/DistanceMatrix?origins={lat_source},{lng_source}" +
                             f"&destinations={lat_destination},{lng_destination}&vehicle=bike&api_key={API_KEY}")
@@ -63,4 +63,4 @@ h233_lng = 105.77174012117797
 ctu_lat = 10.029553099000054
 ctu_lng = 105.77107771100003
 
-get_distance(h233_lat, h233_lng, ctu_lat, ctu_lng)
+get_distance_value(h233_lat, h233_lng, ctu_lat, ctu_lng)

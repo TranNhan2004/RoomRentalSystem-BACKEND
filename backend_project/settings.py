@@ -63,6 +63,8 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id'
 }
 
+GOONG_API_KEY = os.getenv('GOONG_API_KEY')
+
 # Application definition
 INSTALLED_APPS = [
     'corsheaders',

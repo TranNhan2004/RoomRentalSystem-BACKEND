@@ -12,6 +12,17 @@ from apps.user_account.models import CustomUser
 
 
 # -----------------------------------------------------------
+class RentalRoomSerializer(ModelSerializer):
+    commune = PrimaryKeyRelatedField(queryset=Commune.objects.all())
+    lessor = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
+    manager = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
+    
+    class Meta:
+        model = RentalRoom
+        fields = '__all__'
+
+
+# -----------------------------------------------------------
 class RentalRoomImageSerializer(ModelSerializer):
     rental_room = PrimaryKeyRelatedField(queryset=RentalRoom.objects.all())
     
@@ -54,18 +65,4 @@ class MonitoringRentalSerializer(ModelSerializer):
     
     class Meta:
         model = MonitoringRental
-        fields = '__all__'
-        
-
-# -----------------------------------------------------------
-class RentalRoomSerializer(ModelSerializer):
-    commune = PrimaryKeyRelatedField(queryset=Commune.objects.all())
-    lessor = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
-    manager = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
-    images = RentalRoomImageSerializer(many=True, read_only=True)
-    charges_lists = ChargesListSerializer(many=True, read_only=True)
-    
-    class Meta:
-        model = RentalRoom
-        fields = '__all__'
-        
+        fields = '__all__'        

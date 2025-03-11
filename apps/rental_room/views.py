@@ -1,4 +1,4 @@
-from datetime import date
+from django.utils.timezone import now
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -102,14 +102,13 @@ class ChargesListViewSet(viewsets.ModelViewSet):
     
     def list(self, request, *args, **kwargs):
         mode = request.query_params.get('mode', '').lower()
-        today = date.today()
+        today = now().date()
         
         self.queryset = self.filter_queryset(self.queryset)
 
         if mode == 'first':
             filtered_queryset = self.queryset.filter(
-                start_date__lte=today
-            ).filter(
+                start_date__lte=today,
                 end_date__isnull=True
             ) | self.queryset.filter(
                 start_date__lte=today,
