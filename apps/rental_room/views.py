@@ -1,8 +1,14 @@
 from django.utils.timezone import now
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from backend_project.permissions import IsLessor
+from backend_project.goong_api import get_coords, get_distance_value
+from backend_project.utils import equals_address
+from apps.address.models import Commune, District, Province
+from apps.user_account.models import CustomUser
+from apps.distance.models import Distance
 from .models import (
     RentalRoom, 
     RentalRoomImage, 
@@ -43,6 +49,38 @@ class RentalRoomViewSet(viewsets.ModelViewSet):
         
         return permissions
     
+    def _update_coords_and_distances_for_room(self, room_id, commune_id, additional_address):
+        commune = get_object_or_404(Commune, id=commune_id)
+        district = get_object_or_404(District, id=commune.district.id)
+        province = get_object_or_404(Province, id=district.province.id)
+            
+        room_coords = get_coords(f"{additional_address}, {commune.name}, {district.name}, {province.name}")        
+        rental_room = get_object_or_404(RentalRoom, id=room_id)
+        rental_room.latitude = room_coords[0]
+        rental_room.longitude = room_coords[1]
+        rental_room.save()
+        
+        Distance.objects.filter(rental_room=rental_room.id).delete()
+        renters = CustomUser.objects.filter(is_active=True, role='RENTER')
+
+        distances = []
+        for renter in renters:
+            renter_workplace_coords = (renter.workplace_latitude, renter.workplace_longitude)
+            value = get_distance_value(room_coords, renter_workplace_coords)
+            distances.append(Distance(renter=renter.id, rental_room=rental_room.id, value=value))
+
+        Distance.objects.bulk_create(distances)
+    
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        
+        room_id = response.data.get('id')
+        commune_id = response.data.get('commune')
+        additional_address = response.data.get('additional_address')
+        
+        self._update_coords_and_distances_for_room(room_id, commune_id, additional_address)        
+        return response
+    
     def list(self, request, *args, **kwargs):
         self.queryset = self.filter_queryset(self.queryset)
         return super().list(request, *args, **kwargs)
@@ -51,6 +89,24 @@ class RentalRoomViewSet(viewsets.ModelViewSet):
         if request.method == 'PUT':
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
         return super().update(request, *args, **kwargs)
+    
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        old_commune_id = instance.commune.id
+        old_additional_address = instance.additional_address
+        old_address = f"{old_additional_address}, {old_commune_id}"
+
+        response = super().partial_update(request, *args, **kwargs)
+        room_id = response.data.get('id')
+
+        new_commune_id = response.data.get('commune')
+        new_additional_address = response.data.get('additional_address')
+        new_address = f"{new_additional_address}, {new_commune_id}"
+
+        if not equals_address(old_address, new_address):
+            self._update_coords_and_distances_for_room(room_id, new_commune_id, new_additional_address)
+
+        return response
     
     
 # -----------------------------------------------------------

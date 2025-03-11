@@ -5,5 +5,5 @@ from rest_framework.response import Response
 
 # -----------------------------------------------------------
 class GetRecommendationsView(APIView):
-    def get(self, request):
+    def get(self, request, renter):
         return Response({"details": "Recommendation OK"}, status=status.HTTP_200_OK)

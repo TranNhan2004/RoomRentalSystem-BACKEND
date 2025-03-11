@@ -58,12 +58,6 @@ class RentalRoomImage(models.Model):
     rental_room = models.ForeignKey(RentalRoom, related_name='images', on_delete=models.PROTECT)
     image = models.ImageField(upload_to=rental_room_image_upload_to)
     
-    def delete(self, *args, **kwargs):
-        if self.avatar:
-            self.avatar.delete(save=False)  
-
-        super(RentalRoomImage, self).delete(*args, **kwargs)
-
 
 # -----------------------------------------------------------
 class ChargesList(models.Model):

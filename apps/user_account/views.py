@@ -5,6 +5,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.shortcuts import get_object_or_404
 
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
@@ -14,14 +15,46 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from backend_project.utils import equals_address
+from backend_project.goong_api import get_coords, get_distance_value
 from backend_project.email_bodies import (
     get_activate_account_email_body,
     get_reset_password_email_body
 )
 
+from apps.address.models import Province, District, Commune
+from apps.rental_room.models import RentalRoom
+from apps.distance.models import Distance
+
 from .models import CustomUser
 from .serializers import CustomUserSerializer, CustomTokenObtainPairSerializer
 from .filters import CustomUserFilter
+
+
+def update_coords_and_distances_for_renter(renter_id, workplace_commune_id, workplace_additional_address):
+        commune = get_object_or_404(Commune, id=workplace_commune_id)
+        district = get_object_or_404(District, id=commune.district.id)
+        province = get_object_or_404(Province, id=district.province.id)
+            
+        renter_wokplace_coords = get_coords(
+            f"{workplace_additional_address}, {commune.name}, {district.name}, {province.name}"
+        )        
+        
+        renter = get_object_or_404(CustomUser, id=renter_id)
+        renter.workplace_latitude = renter_wokplace_coords[0]
+        renter.workplace_longitude = renter_wokplace_coords[1]
+        renter.save()
+        
+        Distance.objects.filter(renter=renter.id).delete()
+        rental_rooms = RentalRoom.objects.all()
+
+        distances = []
+        for rental_room in rental_rooms:
+            room_coords = (rental_room.latitude, rental_room.longitude)
+            value = get_distance_value(room_coords, renter_wokplace_coords)
+            distances.append(Distance(renter=renter.id, rental_room=renter_id, value=value))
+
+        Distance.objects.bulk_create(distances)
 
 # -----------------------------------------------------------
 class CustomUserViewSet(viewsets.ModelViewSet):
@@ -47,7 +80,26 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         request.data.pop('created_at', None)
         request.data.pop('updated_at', None)
         request.data.pop('last_login', None)
-        return super().partial_update(request, *args, **kwargs)
+        
+        instance = self.get_object()
+        old_workplace_commune_id = instance.commune.id
+        old_workplace_additional_address = instance.additional_address
+        old_workplace_address = f"{old_workplace_additional_address}, {old_workplace_commune_id}"
+
+        response = super().partial_update(request, *args, **kwargs)
+        user_role = response.data.get('role')
+        
+        if user_role == 'RENTER':
+            renter_id = response.data.get('id')
+
+            new_workplace_commune_id = response.data.get('workplace_commune')
+            new_workplace_additional_address = response.data.get('workplace_additional_address')
+            new_workplace_address = f"{new_workplace_additional_address}, {new_workplace_commune_id}"
+
+            if not equals_address(old_workplace_address, new_workplace_address):
+                update_coords_and_distances_for_renter(renter_id, new_workplace_commune_id, new_workplace_address)
+
+        return response
 
     
 # -----------------------------------------------------------
@@ -259,5 +311,8 @@ class RegisterView(APIView):
 
         user.is_active = True
         user.save()
+        
+        if user.role == 'RENTER':
+            update_coords_and_distances_for_renter(user.id, user.workplace_commune.id, user.workplace_additional_address)
 
         return Response({"detail": "Your account has been activated successfully"}, status=status.HTTP_200_OK)

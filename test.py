@@ -20,47 +20,12 @@
 # print(os.getenv('DEBUG'))
 # print(bool(os.getenv('DEBUG')))
 
+from backend_project.goong_api import get_coords, get_distance_value
 
-import requests
-from urllib.parse import quote
-from unidecode import unidecode
+# get_coords(address='Trường Đại học Cần Thơ, Đ. 3 Tháng 2, Phường Xuân Khánh, Quận Ninh Kiều, Thành phố Cần Thơ')
 
+# h233_coords = (10.044368255553708, 105.77174012117797)
+# ctu_coords = (10.029553099000054, 105.77107771100003)
 
-def get_text_without_accents(text: str) -> str:
-    return unidecode(text)
+# get_distance_value(h233_coords, ctu_coords)
 
-def get_lat_and_lng(address: str):
-    API_KEY = ''
-    
-    encode_address = quote(get_text_without_accents(address))
-    print(encode_address)
-    
-    response = requests.get(f"https://rsapi.goong.io/geocode?address={encode_address}&api_key={API_KEY}")
-    
-    if response.status_code == 200:
-        print(response.json())
-    else:
-        print(f"Yêu cầu thất bại với mã lỗi: {response.status_code}")
-
-
-
-
-def get_distance_value(lat_source, lng_source, lat_destination, lng_destination):
-    API_KEY = ''
-    
-    response = requests.get(f"https://rsapi.goong.io/DistanceMatrix?origins={lat_source},{lng_source}" +
-                            f"&destinations={lat_destination},{lng_destination}&vehicle=bike&api_key={API_KEY}")
-    
-    if response.status_code == 200:
-        print(response.json())
-    else:
-        print(f"Yêu cầu thất bại với mã lỗi: {response.status_code}")
-
-# get_lat_and_lng(address='Trường Đại học Cần Thơ, Đ. 3 Tháng 2, Phường Xuân Khánh, Quận Ninh Kiều, Thành phố Cần Thơ')
-
-h233_lat = 10.044368255553708
-h233_lng = 105.77174012117797
-ctu_lat = 10.029553099000054
-ctu_lng = 105.77107771100003
-
-get_distance_value(h233_lat, h233_lng, ctu_lat, ctu_lng)
