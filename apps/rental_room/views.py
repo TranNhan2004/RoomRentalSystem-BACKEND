@@ -156,6 +156,25 @@ class ChargesListViewSet(viewsets.ModelViewSet):
         
         return permissions
     
+    def create(self, request, *args, **kwargs):
+        rental_room = request.data.get('rental_room')
+        start_date = request.data.get('start_date')
+        
+        if not rental_room:
+            return Response({"details": "Rental room is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not start_date:
+            return Response({"details": "Start date is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if start_date < str(now().date()):
+            return Response({"details": "Start date cannot be in the past."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if ChargesList.objects.filter(end_date__gte=start_date, rental_room=rental_room).exists():
+            return Response({"details": "Start date is invalid."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return super().create(request, *args, **kwargs) 
+        
+    
     def list(self, request, *args, **kwargs):
         mode = request.query_params.get('mode', '').lower()
         today = now().date()
@@ -164,9 +183,6 @@ class ChargesListViewSet(viewsets.ModelViewSet):
 
         if mode == 'first':
             filtered_queryset = self.queryset.filter(
-                start_date__lte=today,
-                end_date__isnull=True
-            ) | self.queryset.filter(
                 start_date__lte=today,
                 end_date__gte=today
             )
@@ -246,6 +262,25 @@ class MonitoringRentalViewSet(viewsets.ModelViewSet):
             permissions.append(IsLessor())
         
         return permissions
+    
+    def create(self, request, *args, **kwargs):
+        renter = request.data.get('renter')
+        room_code = request.data.get('room_code')
+        start_date = request.data.get('start_date')
+        
+        if not renter:
+            return Response({"details": "Renter is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not room_code:
+            return Response({"details": "Room code is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if start_date < str(now().date()):
+            return Response({"details": "Start date cannot be in the past."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if MonitoringRental.objects.filter(end_data__gte=start_date, room_code=room_code, renter=renter).exists():
+            return Response({"details": "Start date is invalid."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return super().create(request, *args, **kwargs) 
     
     def list(self, request, *args, **kwargs):
         self.queryset = self.filter_queryset(self.queryset)

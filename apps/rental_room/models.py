@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.utils.timezone import now
 from django.core.validators import MinValueValidator, MaxValueValidator
 from backend_project.utils import upload_to_fn
 from apps.address.models import Commune
@@ -73,8 +74,8 @@ class ChargesList(models.Model):
     wifi_charge = models.IntegerField(default=-1, validators=[MinValueValidator(-1)])
     rubbish_charge = models.IntegerField(default=0, validators=[MinValueValidator(0)])
         
-    start_date = models.DateField()
-    end_date = models.DateField(null=True, blank=True)
+    start_date = models.DateField(default=now)
+    end_date = models.DateField(default=now)
     
     class Meta:
         constraints = [
@@ -83,10 +84,9 @@ class ChargesList(models.Model):
                 name='__CHARGES_LIST__deposit__lte__room_charge'
             ),
             models.CheckConstraint(
-                check=models.Q(end_date__gt=models.F('start_date')) | models.Q(end_date__isnull=True),
-                name='__CHARGES_LIST__end_date__gt__start_date'
-            )
-
+                check=models.Q(end_date__gte=models.F('start_date')),
+                name='__CHARGES_LIST__end_date__gte__start_date'
+            ),
         ]
 
 
@@ -136,13 +136,13 @@ class MonitoringRental(models.Model):
     room_code = models.ForeignKey(RoomCode, related_name='monitoring_rentals', on_delete=models.PROTECT)
     renter = models.ForeignKey(CustomUser, related_name='rented_room', on_delete=models.PROTECT)
         
-    start_date = models.DateField()
-    end_date = models.DateField(null=True, blank=True)
+    start_date = models.DateField(default=now)
+    end_date = models.DateField(default=now)
     
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=models.Q(end_date__gt=models.F('start_date')) | models.Q(end_date__isnull=True),
-                name='__MONITORING_RENTAL__end_date__gt__start_date'
+                check=models.Q(end_date__gte=models.F('start_date')),
+                name='__MONITORING_RENTAL__end_date__gte__start_date'
             )
         ]

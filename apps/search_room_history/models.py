@@ -12,6 +12,6 @@ class SearchRoomHistory(models.Model):
     rental_room = models.ForeignKey(RentalRoom, related_name='search_room_history', on_delete=models.PROTECT)
     renter = models.ForeignKey(CustomUser, related_name='search_room_history', on_delete=models.PROTECT)
     
-    weight = models.IntegerField(default=1, validators=[MinValueValidator(0)])
+    weight = models.FloatField(default=1.0, validators=[MinValueValidator(1)])
     
     created_at = models.DateTimeField(auto_now_add=True)

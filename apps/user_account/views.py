@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
@@ -120,13 +122,36 @@ class LoginView(TokenObtainPairView):
         user.refresh_from_db()
         
         response.data['user'] = CustomUserSerializer(user).data     
+        
+        refresh = response.data.get('refresh')
+        if refresh:
+            response.set_cookie(
+                key=settings.SESSION_REFRESH_TOKEN_COOKIE_KEYS[user.role],
+                value=refresh,
+                max_age=settings.SESSION_REFRESH_TOKEN_COOKIE_MAX_AGE,
+                secure=True,
+                httponly=True,
+                samesite='None',
+                domain=settings.SESSION_REFRESH_TOKEN_COOKIE_DOMAIN,
+                path=settings.SESSION_REFRESH_TOKEN_COOKIE_PATH
+            )
+            print(response.cookies)
+        
+        response.data.pop('refresh', None)
         return response
 
 
 # -----------------------------------------------------------
 class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = TokenRefreshSerializer
-
+    
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get('refresh_token')
+        if not refresh_token:
+            return Response({"detail": "Refresh token is missing."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        request.data['refresh'] = refresh_token
+        return super().post(request, *args, **kwargs)
 
 # -----------------------------------------------------------
 class SendEmailForResetPasswordView(APIView):
@@ -142,15 +167,6 @@ class SendEmailForResetPasswordView(APIView):
 
         uidb64 = urlsafe_base64_encode(str(user.id).encode())
         token = default_token_generator.make_token(user)
-
-        role_to_idx = {
-            'MANAGER': 0,
-            'LESSOR': 1,
-            'RENTER': 2
-        }
-        if user.role not in role_to_idx:
-            return Response({"error": "Invalid role"}, status=status.HTTP_400_BAD_REQUEST)
-
                 
         reset_link = request.build_absolute_uri(reverse(
             viewname='auth-reset-password-confirm', 
@@ -158,7 +174,7 @@ class SendEmailForResetPasswordView(APIView):
         ))
         reset_link = reset_link.replace(
             settings.BACKEND_URL_FOR_SEND_EMAIL,
-            settings.FRONTEND_URLS_REPLACE_FOR_SEND_EMAIL[role_to_idx[user.role]]
+            settings.FRONTEND_URLS_FOR_SEND_EMAIL[user.role]
         ) 
 
         try:
@@ -171,7 +187,7 @@ class SendEmailForResetPasswordView(APIView):
             email.content_subtype = 'html'
             email.send()
         except Exception as e:
-            return Response({"error": f"Failed to send email: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": f"Failed to send email: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"detail": "Your link to reset password has been sent"}, status=status.HTTP_200_OK)
 
@@ -260,21 +276,15 @@ class SendEmailForRegisterView(APIView):
         
         uidb64 = urlsafe_base64_encode(str(user.id).encode())
         token = default_token_generator.make_token(user)
-
-        role_to_idx = {
-            'LESSOR': 1, 
-            'RENTER': 2
-        }
-        if user.role not in role_to_idx:
-            return Response({"error": "Invalid role"}, status=status.HTTP_400_BAD_REQUEST)
         
         activate_link = request.build_absolute_uri(reverse(
             viewname='auth-activate-account', 
             kwargs={'uidb64': uidb64, 'token': token}
         ))
+        
         activate_link = activate_link.replace(
             settings.BACKEND_URL_FOR_SEND_EMAIL,
-            settings.FRONTEND_URLS_REPLACE_FOR_SEND_EMAIL[role_to_idx[user.role]]
+            settings.FRONTEND_URLS_FOR_SEND_EMAIL[user.role]
         )
 
         try:
@@ -287,7 +297,7 @@ class SendEmailForRegisterView(APIView):
             email.content_subtype = 'html'
             email.send()
         except Exception as e:
-            return Response({"error": f"Failed to send email: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": f"Failed to send email: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"detail": "Your link to activate account has been sent"}, status=status.HTTP_200_OK)
 
