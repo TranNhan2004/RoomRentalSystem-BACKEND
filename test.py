@@ -20,7 +20,7 @@
 # print(os.getenv('DEBUG'))
 # print(bool(os.getenv('DEBUG')))
 
-from backend_project.goong_api import get_coords, get_distance_value
+from services.goong_api import get_coords, get_distance_value
 
 # get_coords(address='Trường Đại học Cần Thơ, Đ. 3 Tháng 2, Phường Xuân Khánh, Quận Ninh Kiều, Thành phố Cần Thơ')
 

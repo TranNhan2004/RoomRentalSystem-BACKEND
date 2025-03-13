@@ -1,11 +1,9 @@
 import uuid
 from django.db import models
-from django.utils.timezone import now
 from django.core.validators import MinValueValidator, MaxValueValidator
-from backend_project.utils import upload_to_fn
+from backend_project.utils import upload_to_fn, today
 from apps.address.models import Commune
 from apps.user_account.models import CustomUser
-
 
 # -----------------------------------------------------------
 class RentalRoom(models.Model):
@@ -18,14 +16,8 @@ class RentalRoom(models.Model):
     longitude = models.FloatField(null=True, blank=True)
     
     closing_time = models.TimeField(null=True, blank=True)
-    
-    max_occupancy_per_room = models.IntegerField(validators=[MinValueValidator(1)], default=1)
-    
     total_number = models.IntegerField(validators=[MinValueValidator(1)], default=1)
-    empty_number = models.IntegerField(validators=[MinValueValidator(0)], default=0)
-    
     average_rating = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(5)], default=0)
-    
     further_description = models.TextField(max_length=1024, null=True, blank=True)
     
     lessor = models.ForeignKey(CustomUser, related_name='possessed_rooms', on_delete=models.PROTECT)
@@ -37,14 +29,6 @@ class RentalRoom(models.Model):
     def __str__(self):
         return self.name
     
-    class Meta:
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(empty_number__lte=models.F('total_number')),
-                name='__RENTAL_ROOM__empty_number__lte__total_number'
-            )
-        ]
-
 
 # -----------------------------------------------------------
 def rental_room_image_upload_to(instance, filename):
@@ -74,9 +58,9 @@ class ChargesList(models.Model):
     wifi_charge = models.IntegerField(default=-1, validators=[MinValueValidator(-1)])
     rubbish_charge = models.IntegerField(default=0, validators=[MinValueValidator(0)])
         
-    start_date = models.DateField(default=now)
-    end_date = models.DateField(default=now)
-    
+    start_date = models.DateField(default=today, validators=[MinValueValidator(today)])
+    end_date = models.DateField(null=True, blank=True)
+
     class Meta:
         constraints = [
             models.CheckConstraint(
@@ -84,19 +68,35 @@ class ChargesList(models.Model):
                 name='__CHARGES_LIST__deposit__lte__room_charge'
             ),
             models.CheckConstraint(
-                check=models.Q(end_date__gte=models.F('start_date')),
-                name='__CHARGES_LIST__end_date__gte__start_date'
+                check=(
+                    models.Q(end_date__isnull=True) |  
+                    models.Q(end_date__gte=models.F('start_date'))  
+                ),
+                name='__CHARGES_LIST__end_date__gte__start_date_or_null'
             ),
         ]
+
 
 
 # -----------------------------------------------------------
 class RoomCode(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     rental_room = models.ForeignKey(RentalRoom, related_name='room_codes', on_delete=models.PROTECT)
+    
     value = models.CharField(max_length=10)
-
-
+    remaining_occupancy = models.IntegerField(validators=[MinValueValidator(1)], default=1)
+    max_occupancy = models.IntegerField(validators=[MinValueValidator(1)], default=1)
+    is_sharable = models.BooleanField(default=False)
+    
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(remaining_occupancy__lte=models.F('max_occupancy')),
+                name='__ROOM_CODE__remaining_occupancy__lte__max_occupancy'
+            ),
+        ]
+    
+    
 # -----------------------------------------------------------
 class MonthlyChargesDetails(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -136,13 +136,16 @@ class MonitoringRental(models.Model):
     room_code = models.ForeignKey(RoomCode, related_name='monitoring_rentals', on_delete=models.PROTECT)
     renter = models.ForeignKey(CustomUser, related_name='rented_room', on_delete=models.PROTECT)
         
-    start_date = models.DateField(default=now)
-    end_date = models.DateField(default=now)
+    start_date = models.DateField(default=today, validators=[MinValueValidator(today)])
+    end_date = models.DateField(null=True, blank=True)
     
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=models.Q(end_date__gte=models.F('start_date')),
-                name='__MONITORING_RENTAL__end_date__gte__start_date'
-            )
+                check=(
+                    models.Q(end_date__isnull=True) |  
+                    models.Q(end_date__gte=models.F('start_date'))  
+                ),
+                name='__MONITORING_RENTAL__end_date__gte__start_date_or_null'
+            ),
         ]

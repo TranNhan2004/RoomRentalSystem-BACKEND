@@ -17,25 +17,7 @@ from apps.rental_room.models import RentalRoom, ChargesList
 from apps.search_room_history.models import SearchRoomHistory
 from apps.distance.models import Distance
 
-# scaled_columns_and_rate = [
-        #     ('room_charge', settings.RECOMMENDATION_ROOM_CHARGE_SCALE_RATE),
-        #     ('electricity_charge', settings.RECOMMENDATION_ELECTRICITY_CHARGE_SCALE_RATE),
-        #     ('water_charge', settings.RECOMMENDATION_WATER_CHARGE_SCALE_RATE),
-        #     ('wifi_charge', settings.RECOMMENDATION_WIFI_CHARGE_SCALE_RATE),
-        #     ('rubbish_charge', settings.RECOMMENDATION_RUBBISH_CHARGE_SCALE_RATE),
-        #     ('distance_value', settings.RECOMMENDATION_DISTANCE_VALUE_SCALE_RATE)
-        # ]
 
-# data[rental_room.id] = {
-                #     'room_charge': charges_list.room_charge,
-                #     'electricity_charge': charges_list.electricity_charge,
-                #     'water_charge': charges_list.water_charge,
-                #     'wifi_charge': charges_list.wifi_charge,
-                #     'rubbish_charge': charges_list.rubbish_charge,
-                #     'distance_value': distance.value,
-                #     'weight': search_room_history.weight,
-                #     'is_searched': True
-                # }
 # -----------------------------------------------------------
 class GetRecommendationsView(APIView):
     def _min_max_scaler_with_rate(self, data: List[float], scale_rate: float):
@@ -100,6 +82,9 @@ class GetRecommendationsView(APIView):
 
         return df
     
+    def _normalize_rental_rooms_df(self, df: pd.DataFrame):
+        normalized_df = normalize(df.values, norm='l2')
+        return pd.DataFrame(normalized_df, index=df.index, columns=df.columns)
     
     def _get_top_k_closest_rooms(self, room_id: str, room_df: pd.DataFrame):
         k = settings.RECOMMENDATION_K_CLOSEST_ROOMS
@@ -108,14 +93,16 @@ class GetRecommendationsView(APIView):
         for room in room_df['room_id' != room_id]:
             pass
     
-    
     def get(self, request, renter):    
         weights = self._get_weights_of_searched_data(renter)
-        rental_rooms_df = self._get_scaled_rental_rooms_df(renter)
-        
-        if len(weights) == 0 or len(rental_rooms_df) == 0:
+        if len(weights) == 0:
             return Response([], status=status.HTTP_200_OK)
         
+        rental_rooms_df = self._get_scaled_rental_rooms_df(renter)
+        if len(rental_rooms_df) == 0:
+            return Response([], status=status.HTTP_200_OK)
+        
+        rental_rooms_df = self._normalize_rental_rooms_df(rental_rooms_df)
         recommendations = []
 
         return Response([], status=status.HTTP_200_OK)

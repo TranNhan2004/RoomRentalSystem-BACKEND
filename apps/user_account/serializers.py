@@ -1,7 +1,10 @@
-from rest_framework.serializers import ModelSerializer, ValidationError, PrimaryKeyRelatedField
+from rest_framework.serializers import ModelSerializer, ValidationError, PrimaryKeyRelatedField, CharField
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import CustomUser
+from backend_project.utils import equals_address, date_time_now
 from apps.address.models import Commune
+from services.user_account import update_coords_and_distances_for_renter
+
+from .models import CustomUser
 
 
 # -----------------------------------------------------------
@@ -43,6 +46,23 @@ class CustomUserSerializer(ModelSerializer):
         
         return super().validate(data)
     
+    def update(self, instance, validated_data):
+        old_commune = instance.workplace_commune
+        old_additional_address = instance.workplace_additional_address
+        old_workplace_address = f"{old_additional_address}, {old_commune.id}" if old_commune else ""
+        
+        instance = super().update(instance, validated_data)
+        
+        if instance.role == 'RENTER':
+            new_commune = validated_data.get('workplace_commune', instance.workplace_commune)
+            new_additional_address = validated_data.get('workplace_additional_address', instance.workplace_additional_address)
+            new_workplace_address = f"{new_additional_address}, {new_commune.id}" if new_commune else ""
+            
+            if not equals_address(old_workplace_address, new_workplace_address):
+                update_coords_and_distances_for_renter(instance.id, new_commune.id, new_additional_address)
+        
+        return instance
+    
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation.pop('password', None)   
@@ -51,12 +71,20 @@ class CustomUserSerializer(ModelSerializer):
 
 # -----------------------------------------------------------
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):    
+    role = CharField(required=True)
+
     def validate(self, attrs):
+        requested_role = attrs.get('role')
+
         data = super().validate(attrs)
-        data['user'] = {
-            'id': str(self.user.id),
-            'role': self.user.role
-        }
+    
+        if requested_role != self.user.role:
+            raise ValidationError("Invalid role")
+        
+        self.user.last_login = date_time_now()
+        self.user.save()
+        
+        data['user'] = CustomUserSerializer(self.user).data
         return data
     
 

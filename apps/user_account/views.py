@@ -1,15 +1,12 @@
-from datetime import datetime
-
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 from django.conf import settings
 from django.urls import reverse
-from django.utils.timezone import now
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.shortcuts import get_object_or_404
 
-from rest_framework import viewsets, status
+from rest_framework import status
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -17,49 +14,20 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from backend_project.utils import equals_address
-from backend_project.goong_api import get_coords, get_distance_value
 from backend_project.email_bodies import (
     get_activate_account_email_body,
     get_reset_password_email_body
 )
 
-from apps.address.models import Province, District, Commune
-from apps.rental_room.models import RentalRoom
-from apps.distance.models import Distance
+from services.user_account import update_coords_and_distances_for_renter
 
 from .models import CustomUser
 from .serializers import CustomUserSerializer, CustomTokenObtainPairSerializer
 from .filters import CustomUserFilter
 
 
-def update_coords_and_distances_for_renter(renter_id, workplace_commune_id, workplace_additional_address):
-        commune = get_object_or_404(Commune, id=workplace_commune_id)
-        district = get_object_or_404(District, id=commune.district.id)
-        province = get_object_or_404(Province, id=district.province.id)
-            
-        renter_wokplace_coords = get_coords(
-            f"{workplace_additional_address}, {commune.name}, {district.name}, {province.name}"
-        )        
-        
-        renter = get_object_or_404(CustomUser, id=renter_id)
-        renter.workplace_latitude = renter_wokplace_coords[0]
-        renter.workplace_longitude = renter_wokplace_coords[1]
-        renter.save()
-        
-        Distance.objects.filter(renter=renter.id).delete()
-        rental_rooms = RentalRoom.objects.all()
-
-        distances = []
-        for rental_room in rental_rooms:
-            room_coords = (rental_room.latitude, rental_room.longitude)
-            value = get_distance_value(room_coords, renter_wokplace_coords)
-            distances.append(Distance(renter=renter.id, rental_room=renter_id, value=value))
-
-        Distance.objects.bulk_create(distances)
-
 # -----------------------------------------------------------
-class CustomUserViewSet(viewsets.ModelViewSet):
+class CustomUserViewSet(ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
     filterset_class = CustomUserFilter
@@ -82,26 +50,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         request.data.pop('created_at', None)
         request.data.pop('updated_at', None)
         request.data.pop('last_login', None)
-        
-        instance = self.get_object()
-        old_workplace_commune_id = instance.commune.id
-        old_workplace_additional_address = instance.additional_address
-        old_workplace_address = f"{old_workplace_additional_address}, {old_workplace_commune_id}"
-
-        response = super().partial_update(request, *args, **kwargs)
-        user_role = response.data.get('role')
-        
-        if user_role == 'RENTER':
-            renter_id = response.data.get('id')
-
-            new_workplace_commune_id = response.data.get('workplace_commune')
-            new_workplace_additional_address = response.data.get('workplace_additional_address')
-            new_workplace_address = f"{new_workplace_additional_address}, {new_workplace_commune_id}"
-
-            if not equals_address(old_workplace_address, new_workplace_address):
-                update_coords_and_distances_for_renter(renter_id, new_workplace_commune_id, new_workplace_address)
-
-        return response
+        return super().partial_update(request, *args, **kwargs)
 
     
 # -----------------------------------------------------------
@@ -110,23 +59,12 @@ class LoginView(TokenObtainPairView):
     
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
-        req_user_role = request.data.get('role')
-        res_user_role = response.data.get('user').get('role')
-        if response.status_code == 200 and req_user_role != res_user_role:
-            return Response({'detail': 'Invalid role'}, status=status.HTTP_403_FORBIDDEN)
-        
-        res_user_id = response.data.get('user').get('id')
-        user = get_user_model().objects.get(id=res_user_id)
-        user.last_login = now()
-        user.save()
-        user.refresh_from_db()
-        
-        response.data['user'] = CustomUserSerializer(user).data     
-        
+            
         refresh = response.data.get('refresh')
-        if refresh:
+        user_role = response.data.get('user', {}).get('role')
+        if refresh and user_role:
             response.set_cookie(
-                key=settings.SESSION_REFRESH_TOKEN_COOKIE_KEYS[user.role],
+                key=settings.SESSION_REFRESH_TOKEN_COOKIE_KEYS[user_role],
                 value=refresh,
                 max_age=settings.SESSION_REFRESH_TOKEN_COOKIE_MAX_AGE,
                 secure=True,
@@ -135,10 +73,11 @@ class LoginView(TokenObtainPairView):
                 domain=settings.SESSION_REFRESH_TOKEN_COOKIE_DOMAIN,
                 path=settings.SESSION_REFRESH_TOKEN_COOKIE_PATH
             )
-            print(response.cookies)
         
-        response.data.pop('refresh', None)
-        return response
+            response.data.pop('refresh', None)
+            return response
+        
+        return Response({"detail": "Invalid refresh token or user role"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # -----------------------------------------------------------
@@ -152,6 +91,7 @@ class CustomTokenRefreshView(TokenRefreshView):
             
         request.data['refresh'] = refresh_token
         return super().post(request, *args, **kwargs)
+
 
 # -----------------------------------------------------------
 class SendEmailForResetPasswordView(APIView):
