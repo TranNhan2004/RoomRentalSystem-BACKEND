@@ -64,10 +64,6 @@ class ChargesList(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=models.Q(deposit__lte=models.F('room_charge')),
-                name='__CHARGES_LIST__deposit__lte__room_charge'
-            ),
-            models.CheckConstraint(
                 check=(
                     models.Q(end_date__isnull=True) |  
                     models.Q(end_date__gte=models.F('start_date'))  

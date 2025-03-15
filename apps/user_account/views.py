@@ -59,7 +59,6 @@ class LoginView(TokenObtainPairView):
     
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
-            
         refresh = response.data.get('refresh')
         user_role = response.data.get('user', {}).get('role')
         if refresh and user_role:
@@ -85,7 +84,9 @@ class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = TokenRefreshSerializer
     
     def post(self, request, *args, **kwargs):
-        refresh_token = request.COOKIES.get('refresh_token')
+        user_role = request.data.get('role')
+        refresh_token = request.COOKIES.get(settings.SESSION_REFRESH_TOKEN_COOKIE_KEYS[user_role])
+
         if not refresh_token:
             return Response({"detail": "Refresh token is missing."}, status=status.HTTP_400_BAD_REQUEST)
             

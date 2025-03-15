@@ -1,10 +1,9 @@
-from django.utils.timezone import now
-from django.db import models
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from backend_project.permissions import IsLessor
+from backend_project.utils import today
 from .models import (
     RentalRoom, 
     RentalRoomImage, 
@@ -105,18 +104,16 @@ class ChargesListViewSet(viewsets.ModelViewSet):
             
     def list(self, request, *args, **kwargs):
         mode = request.query_params.get('mode', '').lower()
-        today = now().date()
-        
         self.queryset = self.filter_queryset(self.queryset)
 
         if mode == 'first':
             filtered_queryset = self.queryset.filter(
-                start_date__lte=today
+                start_date__lte=today()
             ).filter(
-                models.Q(end_date__isnull=True) | models.Q(end_date__gte=today)
+                end_date__isnull=True
             )
 
-            first_data = filtered_queryset.order_by('start_date').first()
+            first_data = filtered_queryset.first()
             
             if first_data:
                 serializer = self.get_serializer(first_data)
