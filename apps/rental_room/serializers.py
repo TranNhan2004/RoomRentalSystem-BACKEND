@@ -1,4 +1,9 @@
-from rest_framework.serializers import ModelSerializer, PrimaryKeyRelatedField, ValidationError
+from rest_framework.serializers import (
+    ModelSerializer, 
+    PrimaryKeyRelatedField, 
+    ValidationError, 
+    TimeField
+)
 from backend_project.utils import equals_address
 from apps.address.models import Commune
 from apps.user_account.models import CustomUser
@@ -16,17 +21,25 @@ from .models import (
 class RentalRoomSerializer(ModelSerializer):
     commune = PrimaryKeyRelatedField(queryset=Commune.objects.all())
     lessor = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
-    manager = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
+    manager = PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False, allow_null=True)
+    closing_time = TimeField(required=False, allow_null=True)   
     
     class Meta:
         model = RentalRoom
         fields = '__all__'
+    
+    def is_valid(self, *, raise_exception=True):
+        if 'closing_time' in self.initial_data and self.initial_data['closing_time'] == '':
+            self.initial_data['closing_time'] = None
+            
+        return super().is_valid(raise_exception=raise_exception)
     
     def create(self, validated_data):
         instance = super().create(validated_data)
         
         commune = validated_data.get('commune')
         additional_address = validated_data.get('additional_address')
+        
         update_coords_and_distances_for_room(instance.id, commune.id, additional_address)
         return instance
     

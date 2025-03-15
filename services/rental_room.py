@@ -26,4 +26,5 @@ def update_coords_and_distances_for_room(room_id, commune_id, additional_address
         value = get_distance_value(room_coords, renter_workplace_coords)
         distances.append(Distance(renter=renter.id, rental_room=rental_room.id, value=value))
     
-    Distance.objects.bulk_create(distances)
+    if len(distances) > 0:
+        Distance.objects.bulk_create(distances)

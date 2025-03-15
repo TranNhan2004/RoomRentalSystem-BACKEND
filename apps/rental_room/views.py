@@ -1,12 +1,10 @@
 from django.utils.timezone import now
-from django.shortcuts import get_object_or_404
 from django.db import models
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from backend_project.permissions import IsLessor
-from backend_project.utils import equals_address
-from services.rental_room import update_coords_and_distances_for_room
 from .models import (
     RentalRoom, 
     RentalRoomImage, 
@@ -62,6 +60,7 @@ class RentalRoomImageViewSet(viewsets.ModelViewSet):
     queryset = RentalRoomImage.objects.all()
     serializer_class = RentalRoomImageSerializer
     filterset_class = RentalRoomImageFilter
+    parser_classes = (MultiPartParser, FormParser)
     
     def get_permissions(self):
         permissions = [IsAuthenticated()]

@@ -25,7 +25,7 @@ class RentalRoomFilter(FilterSet):
     
     class Meta:
         model = RentalRoom
-        fields = ['commune', 'lessor', 'manager', 'manager_is_null']
+        fields = ['commune', 'lessor', 'manager', 'manager_is_null', 'is_empty']
         
 
 # -----------------------------------------------------------
