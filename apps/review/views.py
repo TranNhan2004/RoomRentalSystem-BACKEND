@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from backend_project.permissions import IsLessor, IsRenter
+from backend_project.permissions import IsRenter, IsRenterOrLessor
 from services.review import update_average_rating
 from .models import Review
 from .serializers import ReviewSerializer
@@ -19,7 +19,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             permissions.append(IsRenter())
         else:
-            permissions.append(IsRenter() | IsLessor())
+            permissions.append(IsRenterOrLessor())
         return permissions
 
     def list(self, request, *args, **kwargs):

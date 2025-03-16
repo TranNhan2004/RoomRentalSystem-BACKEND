@@ -66,9 +66,9 @@ class ChargesList(models.Model):
             models.CheckConstraint(
                 check=(
                     models.Q(end_date__isnull=True) |  
-                    models.Q(end_date__gte=models.F('start_date'))  
+                    models.Q(end_date__gt=models.F('start_date'))  
                 ),
-                name='__CHARGES_LIST__end_date__gte__start_date_or_null'
+                name='__CHARGES_LIST__end_date__gt__start_date_or_null'
             ),
         ]
 
@@ -104,9 +104,9 @@ class MonthlyChargesDetails(models.Model):
     old_m3_reading = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     new_m3_reading = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
-    prev_remaining_charges = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    due_charges = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    paid_charges = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    prev_remaining_charge = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    due_charge = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    paid_charge = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
     is_settled = models.BooleanField(default=False)
     
@@ -140,8 +140,8 @@ class MonitoringRental(models.Model):
             models.CheckConstraint(
                 check=(
                     models.Q(end_date__isnull=True) |  
-                    models.Q(end_date__gte=models.F('start_date'))  
+                    models.Q(end_date__gt=models.F('start_date'))  
                 ),
-                name='__MONITORING_RENTAL__end_date__gte__start_date_or_null'
+                name='__MONITORING_RENTAL__end_date__gt__start_date_or_null'
             ),
         ]

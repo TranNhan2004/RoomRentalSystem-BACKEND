@@ -84,8 +84,7 @@ class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = TokenRefreshSerializer
     
     def post(self, request, *args, **kwargs):
-        user_role = request.data.get('role')
-        refresh_token = request.COOKIES.get(settings.SESSION_REFRESH_TOKEN_COOKIE_KEYS[user_role])
+        refresh_token = request.COOKIES.get(settings.SESSION_REFRESH_TOKEN_COOKIE_KEYS[request.user.role])
 
         if not refresh_token:
             return Response({"detail": "Refresh token is missing."}, status=status.HTTP_400_BAD_REQUEST)
