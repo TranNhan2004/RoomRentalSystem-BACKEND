@@ -152,6 +152,10 @@ class RoomCodeViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
         return super().update(request, *args, **kwargs)
     
+    def partial_update(self, request, *args, **kwargs):
+        request.data.pop('remaining_occupancy', None)
+        return super().partial_update(request, *args, **kwargs)
+    
 
 # -----------------------------------------------------------
 class MonthlyChargesDetailsViewSet(viewsets.ModelViewSet):
@@ -167,6 +171,15 @@ class MonthlyChargesDetailsViewSet(viewsets.ModelViewSet):
         
         return permissions
     
+    def create(self, request, *args, **kwargs):
+        request.data.pop('prev_remaining_charge', None)
+        request.data.pop('due_charge', None)
+        request.data.pop('paid_charge', None)
+        request.data.pop('is_settled', None)
+        request.data.pop('created_at', None)
+        request.data.pop('updated_at', None)
+        return super().create(request, *args, **kwargs)
+    
     def list(self, request, *args, **kwargs):
         self.queryset = self.filter_queryset(self.queryset)
         return super().list(request, *args, **kwargs)
@@ -175,6 +188,13 @@ class MonthlyChargesDetailsViewSet(viewsets.ModelViewSet):
         if request.method == 'PUT':
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
         return super().update(request, *args, **kwargs)
+    
+    def partial_update(self, request, *args, **kwargs):
+        request.data.pop('prev_remaining_charge', None)
+        request.data.pop('due_charge', None)
+        request.data.pop('created_at', None)
+        request.data.pop('updated_at', None)
+        return super().partial_update(request, *args, **kwargs)
     
     
 # -----------------------------------------------------------
@@ -190,6 +210,10 @@ class MonitoringRentalViewSet(viewsets.ModelViewSet):
             permissions.append(IsLessor())
         
         return permissions
+    
+    def create(self, request, *args, **kwargs):
+        request.data.pop('end_date', None)
+        return super().create(request, *args, **kwargs)
     
     def list(self, request, *args, **kwargs):
         self.queryset = self.filter_queryset(self.queryset)

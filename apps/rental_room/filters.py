@@ -59,13 +59,24 @@ class RoomCodeFilter(FilterSet):
         
 # -----------------------------------------------------------
 class MonthlyChargesDetailsFilter(FilterSet):
+    from_created_date = DateFilter(field_name='created_at', lookup_expr='gte')
+    to_created_date = DateFilter(field_name='created_at', lookup_expr='lte')
+    
     class Meta:
         model = MonthlyChargesDetails
-        fields = ['room_code']
+        fields = ['room_code', 'from_created_date', 'to_created_date']
         
 
 # -----------------------------------------------------------
 class MonitoringRentalFilter(FilterSet):
+    from_date = DateFilter(field_name='start_date', lookup_expr='gte')
+    to_date = DateFilter(field_name='end_date', method='filter_to_date')
+
+    def filter_to_date(self, queryset, name, value):
+        return queryset.filter(
+            models.Q(end_date__lte=value) | models.Q(end_date__isnull=True)
+        )
+    
     class Meta:
         model = MonitoringRental
-        fields = ['room_code', 'renter']
+        fields = ['room_code', 'renter', 'from_date', 'to_date']

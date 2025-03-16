@@ -112,11 +112,11 @@ class RoomCodeSerializer(ModelSerializer):
         is_sharable = validated_data.get('is_sharable')
         max_occupancy = validated_data.get('max_occupancy')
                 
-        if is_sharable and instance.remaining_occupancy == 0:
-            raise ValidationError("Cannot make room sharable if remaining occupancy is 0.")
+        if is_sharable and instance.current_occupancy == instance.max_occupancy:
+            raise ValidationError("Cannot make room sharable if current occupancy is max.")
         
-        if max_occupancy and max_occupancy < instance.max_occupancy - instance.remaining_occupancy:
-            raise ValidationError("Max occupancy cannot be lower than the current rental.")
+        if max_occupancy and max_occupancy < instance.current_occupancy:
+            raise ValidationError("Max occupancy cannot be lower than the current occupancy.")
         
         return super().update(instance, validated_data)
     
@@ -164,13 +164,19 @@ class MonthlyChargesDetailsSerializer(ModelSerializer):
 
         validated_data['old_kWh_reading'] = old_kWh_reading
         validated_data['old_m3_reading'] = old_m3_reading
-        validated_data['prev_remaining_charge'] = prev_record.due_charge - prev_record.paid_charge
+        
+        if prev_record:
+            validated_data['prev_remaining_charge'] = max(prev_record.due_charge - prev_record.paid_charge, 0)
+        else:
+            validated_data['prev_remaining_charge'] = 0
 
         validated_data['due_charge'] = (
             validated_data['prev_remaining_charge'] +
+            (charges_list.room_charge if validated_data['continue_renting'] else 0) +
             (validated_data['new_kWh_reading'] - old_kWh_reading) * charges_list.electricity_charge +
             (validated_data['new_m3_reading'] - old_m3_reading) * charges_list.water_charge +
-            max(charges_list.wifi_charge, 0) + charges_list.rubbish_charge
+            max(charges_list.wifi_charge, 0) + 
+            charges_list.rubbish_charge
         )
         
         return super().create(validated_data)
@@ -196,14 +202,19 @@ class MonitoringRentalSerializer(ModelSerializer):
         if MonitoringRental.objects.filter(end_date__gte=start_date, room_code=room_code, renter=renter).exists():
             raise ValidationError("Start date is invalid.")
         
-        if room_code.remaining_occupancy == 0:
+        if room_code.current_occupancy == room_code.max_occupancy:
             raise ValidationError("Room is not available.")
         
         instance = super().create(validated_data)
         
-        room_code.remaining_occupancy -= 1
-        if room_code.remaining_occupancy == 0:
-            room_code.is_sharable = False
-            
-        room_code.save()
-        return instance
+        try:
+            room_code_record = RoomCode.objects.get(id=room_code.id)
+            room_code_record.current_occupancy += 1
+            if room_code_record.current_occupancy == room_code_record.max_occupancy:
+                room_code_record.is_sharable = False
+                
+            room_code_record.save()
+            return instance
+        
+        except RoomCode.DoesNotExist:
+            raise ValidationError("Room code with the given id does not exist.")

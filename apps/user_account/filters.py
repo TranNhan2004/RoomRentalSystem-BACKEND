@@ -10,4 +10,4 @@ class CustomUserFilter(FilterSet):
     
     class Meta:
         model = CustomUser
-        fields = ['id_not', 'role_include', 'is_active']
+        fields = ['id_not', 'role_include', 'is_active', 'phone_number']

@@ -80,15 +80,15 @@ class RoomCode(models.Model):
     rental_room = models.ForeignKey(RentalRoom, related_name='room_codes', on_delete=models.PROTECT)
     
     value = models.CharField(max_length=10)
-    remaining_occupancy = models.IntegerField(validators=[MinValueValidator(1)], default=1)
+    current_occupancy = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     max_occupancy = models.IntegerField(validators=[MinValueValidator(1)], default=1)
     is_sharable = models.BooleanField(default=False)
     
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=models.Q(remaining_occupancy__lte=models.F('max_occupancy')),
-                name='__ROOM_CODE__remaining_occupancy__lte__max_occupancy'
+                check=models.Q(current_occupancy__lte=models.F('max_occupancy')),
+                name='__ROOM_CODE__current_occupancy__lte__max_occupancy'
             ),
         ]
     
@@ -108,6 +108,7 @@ class MonthlyChargesDetails(models.Model):
     due_charge = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     paid_charge = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
+    continue_renting = models.BooleanField(default=True)
     is_settled = models.BooleanField(default=False)
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -116,12 +117,12 @@ class MonthlyChargesDetails(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=models.Q(new_kWh_reading__lte=models.F('old_kWh_reading')),
-                name='__MONTHLY_CHARGES_DETAILS__new_kWh_reading__lte__old_kWh_reading'
+                check=models.Q(new_kWh_reading__gte=models.F('old_kWh_reading')),
+                name='__MONTHLY_CHARGES_DETAILS__new_kWh_reading__gte__old_kWh_reading'
             ),
             models.CheckConstraint(
-                check=models.Q(new_m3_reading__lte=models.F('old_m3_reading')),
-                name='__MONTHLY_CHARGES_DETAILS__new_m3_reading__lte__old_m3_reading'
+                check=models.Q(new_m3_reading__gte=models.F('old_m3_reading')),
+                name='__MONTHLY_CHARGES_DETAILS__new_m3_reading__gte__old_m3_reading'
             )
         ]
 
