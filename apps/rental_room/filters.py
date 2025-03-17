@@ -64,7 +64,7 @@ class MonthlyChargesDetailsFilter(FilterSet):
     
     class Meta:
         model = MonthlyChargesDetails
-        fields = ['room_code', 'from_created_date', 'to_created_date']
+        fields = ['room_code', 'is_settled', 'from_created_date', 'to_created_date']
         
 
 # -----------------------------------------------------------

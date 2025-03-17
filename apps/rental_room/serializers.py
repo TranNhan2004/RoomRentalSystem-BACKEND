@@ -90,6 +90,12 @@ class ChargesListSerializer(ModelSerializer):
         
         return super().create(validated_data)
 
+    def update(self, instance, validated_data):
+        if instance.end_date:
+            raise ValidationError("Cannot update the ended charges list.")
+        
+        return super().update(instance, validated_data)
+
 
 # -----------------------------------------------------------
 class RoomCodeSerializer(ModelSerializer):
@@ -106,6 +112,7 @@ class RoomCodeSerializer(ModelSerializer):
         if room_codes and room_codes.count() >= rental_room.total_number:
             raise ValidationError("Maximum number of room codes reached.")
         
+        validated_data['current_occupancy'] = 0
         return super().create(validated_data)
     
     def update(self, instance, validated_data):
@@ -133,9 +140,19 @@ class MonthlyChargesDetailsSerializer(ModelSerializer):
     def create(self, validated_data):
         created_mode = validated_data.get('created_mode', 'auto')
         room_code = validated_data.get('room_code')
-        is_not_settled_record = MonthlyChargesDetails.objects.filter(room_code=room_code, is_settled=False).first()
         
-        if is_not_settled_record:
+        charges_list = ChargesList.objects.filter(
+            rental_room=room_code.rental_room, 
+            end_date__isnull=True
+        ).first()
+        if not charges_list:
+            raise ValidationError("Charges list not found for this room.")
+        
+        has_not_settled_record = MonthlyChargesDetails.objects.filter(
+            room_code=room_code, 
+            is_settled=False
+        ).exists()
+        if has_not_settled_record:
             raise ValidationError("There is an existing unsettled record.")
         
         if created_mode == 'first':
@@ -148,7 +165,11 @@ class MonthlyChargesDetailsSerializer(ModelSerializer):
                 raise ValidationError("old_m3_reading is required when created_mode is 'first'.")
             
         elif created_mode == 'auto':
-            prev_record = MonthlyChargesDetails.objects.filter(room_code=room_code).order_by('-created_at').first()
+            prev_record = MonthlyChargesDetails.objects.filter(
+                room_code=room_code, 
+                is_settled=True
+            ).order_by('-created_at').first()
+            
             if not prev_record:
                 raise ValidationError("Previous record not found.")
             
@@ -158,13 +179,9 @@ class MonthlyChargesDetailsSerializer(ModelSerializer):
         else:
             raise ValidationError("Invalid created_mode.")
 
-        charges_list = ChargesList.objects.filter(rental_room=room_code.rental_room, end_date__isnull=True).first()
-        if not charges_list:
-            raise ValidationError("Charges list not found for this room.")
-
         validated_data['old_kWh_reading'] = old_kWh_reading
         validated_data['old_m3_reading'] = old_m3_reading
-        
+            
         if prev_record:
             validated_data['prev_remaining_charge'] = max(prev_record.due_charge - prev_record.paid_charge, 0)
         else:
@@ -180,6 +197,12 @@ class MonthlyChargesDetailsSerializer(ModelSerializer):
         )
         
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if instance.is_settled:
+            raise ValidationError("Cannot update settled record.")
+        
+        return super().update(instance, validated_data)
 
         
 # -----------------------------------------------------------
@@ -218,3 +241,9 @@ class MonitoringRentalSerializer(ModelSerializer):
         
         except RoomCode.DoesNotExist:
             raise ValidationError("Room code with the given id does not exist.")
+    
+    def update(self, instance, validated_data):
+        if instance.end_date:
+            raise ValidationError("Cannot update ended rental.")
+        
+        return super().update(instance, validated_data)
