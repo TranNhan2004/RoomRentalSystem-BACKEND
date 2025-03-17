@@ -136,7 +136,7 @@ class MonthlyChargesDetailsSerializer(ModelSerializer):
     class Meta:
         model = MonthlyChargesDetails
         fields = '__all__'
-    
+        
     def create(self, validated_data):
         created_mode = validated_data.get('created_mode', 'auto')
         room_code = validated_data.get('room_code')
@@ -154,6 +154,10 @@ class MonthlyChargesDetailsSerializer(ModelSerializer):
         ).exists()
         if has_not_settled_record:
             raise ValidationError("There is an existing unsettled record.")
+        
+        prev_record = None
+        old_kWh_reading = None
+        old_m3_reading = None
         
         if created_mode == 'first':
             old_kWh_reading = validated_data.get('old_kWh_reading')
@@ -195,6 +199,8 @@ class MonthlyChargesDetailsSerializer(ModelSerializer):
             max(charges_list.wifi_charge, 0) + 
             charges_list.rubbish_charge
         )
+        
+        validated_data.pop('created_mode')
         
         return super().create(validated_data)
 
