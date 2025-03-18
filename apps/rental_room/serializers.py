@@ -11,10 +11,10 @@ from apps.user_account.models import CustomUser
 from services.rental_room import update_coords_and_distances_for_room
 from .models import (
     RentalRoom, 
-    RentalRoomImage, 
-    ChargesList,
+    RoomImage, 
+    Charges,
     RoomCode,
-    MonthlyChargesDetails,
+    MonthlyRoomInvoice,
     MonitoringRental
 )
 
@@ -62,30 +62,30 @@ class RentalRoomSerializer(ModelSerializer):
 
 
 # -----------------------------------------------------------
-class RentalRoomImageSerializer(ModelSerializer):
+class RoomImageSerializer(ModelSerializer):
     rental_room = PrimaryKeyRelatedField(queryset=RentalRoom.objects.all())
     
     class Meta:
-        model = RentalRoomImage
+        model = RoomImage
         fields = '__all__'
 
 
 # -----------------------------------------------------------
-class ChargesListSerializer(ModelSerializer):
+class ChargesSerializer(ModelSerializer):
     rental_room = PrimaryKeyRelatedField(queryset=RentalRoom.objects.all())
     
     class Meta:
-        model = ChargesList
+        model = Charges
         fields = '__all__'
         
     def create(self, validated_data):
         rental_room = validated_data.get('rental_room')
         start_date = validated_data.get('start_date')
 
-        if ChargesList.objects.filter(end_date__isnull=True, rental_room=rental_room).exists():
+        if Charges.objects.filter(end_date__isnull=True, rental_room=rental_room).exists():
             raise ValidationError("There is an existing rental with a null end date.")
         
-        if ChargesList.objects.filter(end_date__gt=start_date, rental_room=rental_room).exists():
+        if Charges.objects.filter(end_date__gt=start_date, rental_room=rental_room).exists():
             raise ValidationError("Start date is invalid.")
         
         return super().create(validated_data)
@@ -129,26 +129,26 @@ class RoomCodeSerializer(ModelSerializer):
     
 
 # -----------------------------------------------------------
-class MonthlyChargesDetailsSerializer(ModelSerializer):
+class MonthlyRoomInvoiceSerializer(ModelSerializer):
     room_code = PrimaryKeyRelatedField(queryset=RoomCode.objects.all())
     created_mode = ChoiceField(choices=['first', 'auto'], default='auto')
 
     class Meta:
-        model = MonthlyChargesDetails
+        model = MonthlyRoomInvoice
         fields = '__all__'
         
     def create(self, validated_data):
         created_mode = validated_data.get('created_mode', 'auto')
         room_code = validated_data.get('room_code')
         
-        charges_list = ChargesList.objects.filter(
+        charges = Charges.objects.filter(
             rental_room=room_code.rental_room, 
             end_date__isnull=True
         ).first()
-        if not charges_list:
+        if not charges:
             raise ValidationError("Charges list not found for this room.")
         
-        has_not_settled_record = MonthlyChargesDetails.objects.filter(
+        has_not_settled_record = MonthlyRoomInvoice.objects.filter(
             room_code=room_code, 
             is_settled=False
         ).exists()
@@ -169,7 +169,7 @@ class MonthlyChargesDetailsSerializer(ModelSerializer):
                 raise ValidationError("old_m3_reading is required when created_mode is 'first'.")
             
         elif created_mode == 'auto':
-            prev_record = MonthlyChargesDetails.objects.filter(
+            prev_record = MonthlyRoomInvoice.objects.filter(
                 room_code=room_code, 
                 is_settled=True
             ).order_by('-created_at').first()
@@ -193,11 +193,11 @@ class MonthlyChargesDetailsSerializer(ModelSerializer):
 
         validated_data['due_charge'] = (
             validated_data['prev_remaining_charge'] +
-            (charges_list.room_charge if validated_data['continue_renting'] else 0) +
-            (validated_data['new_kWh_reading'] - old_kWh_reading) * charges_list.electricity_charge +
-            (validated_data['new_m3_reading'] - old_m3_reading) * charges_list.water_charge +
-            max(charges_list.wifi_charge, 0) + 
-            charges_list.rubbish_charge
+            (charges.room_charge if validated_data['continue_renting'] else 0) +
+            (validated_data['new_kWh_reading'] - old_kWh_reading) * charges.electricity_charge +
+            (validated_data['new_m3_reading'] - old_m3_reading) * charges.water_charge +
+            max(charges.wifi_charge, 0) + 
+            charges.rubbish_charge
         )
         
         validated_data.pop('created_mode')

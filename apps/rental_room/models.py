@@ -31,21 +31,21 @@ class RentalRoom(models.Model):
     
 
 # -----------------------------------------------------------
-def rental_room_image_upload_to(instance, filename):
+def room_image_upload_to(instance, filename):
     return upload_to_fn(
-        folder_path=f'rental-rooms-images/room-{instance.rental_room.id}',
+        folder_path=f'rooms-images/room-{instance.rental_room.id}',
         filename=filename,
         instance=instance
     )
     
-class RentalRoomImage(models.Model):
+class RoomImage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     rental_room = models.ForeignKey(RentalRoom, related_name='images', on_delete=models.PROTECT)
-    image = models.ImageField(upload_to=rental_room_image_upload_to)
+    image = models.ImageField(upload_to=room_image_upload_to)
     
 
 # -----------------------------------------------------------
-class ChargesList(models.Model):
+class Charges(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     rental_room = models.ForeignKey(RentalRoom, related_name='charges_lists', on_delete=models.PROTECT)
     
@@ -68,7 +68,7 @@ class ChargesList(models.Model):
                     models.Q(end_date__isnull=True) |  
                     models.Q(end_date__gt=models.F('start_date'))  
                 ),
-                name='__CHARGES_LIST__end_date__gt__start_date_or_null'
+                name='__CHARGES__end_date__gt__start_date_or_null'
             ),
         ]
 
@@ -94,7 +94,7 @@ class RoomCode(models.Model):
     
     
 # -----------------------------------------------------------
-class MonthlyChargesDetails(models.Model):
+class MonthlyRoomInvoice(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     room_code = models.ForeignKey(RoomCode, related_name='monthly_charges_details', on_delete=models.PROTECT)
     
@@ -118,11 +118,11 @@ class MonthlyChargesDetails(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=models.Q(new_kWh_reading__gte=models.F('old_kWh_reading')),
-                name='__MONTHLY_CHARGES_DETAILS__new_kWh_reading__gte__old_kWh_reading'
+                name='__MONTHLY_ROOM_INVOICE__new_kWh_reading__gte__old_kWh_reading'
             ),
             models.CheckConstraint(
                 check=models.Q(new_m3_reading__gte=models.F('old_m3_reading')),
-                name='__MONTHLY_CHARGES_DETAILS__new_m3_reading__gte__old_m3_reading'
+                name='__MONTHLY_ROOM_INVOICE__new_m3_reading__gte__old_m3_reading'
             )
         ]
 

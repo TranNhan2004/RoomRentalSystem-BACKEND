@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 
-from apps.rental_room.models import RentalRoom, ChargesList
+from apps.rental_room.models import RentalRoom, Charges
 from apps.search_room_history.models import SearchRoomHistory
 from apps.distance.models import Distance
 
@@ -53,16 +53,16 @@ class GetRecommendationsView(APIView):
         rental_rooms_data = []
         for rental_room in rental_rooms:
             distance = get_object_or_404(Distance, rental_room=rental_room.id, renter=renter_id)
-            charges_list = get_object_or_404(ChargesList, rental_room=rental_room.id, end_date__gte=today)
+            charges = get_object_or_404(Charges, rental_room=rental_room.id, end_date__gte=today)
             rental_rooms_data.append({
                 'id': rental_room.id,
                 'name': rental_room.name,
                 'average_rating': rental_room.average_rating,
-                'room_charge': charges_list.room_charge,
-                'electricity_charge': charges_list.electricity_charge,
-                'water_charge': charges_list.water_charge,
-                'wifi_charge': charges_list.wifi_charge,
-                'rubbish_charge': charges_list.rubbish_charge,
+                'room_charge': charges.room_charge,
+                'electricity_charge': charges.electricity_charge,
+                'water_charge': charges.water_charge,
+                'wifi_charge': charges.wifi_charge,
+                'rubbish_charge': charges.rubbish_charge,
                 'distance_value': distance.value,
             })
         

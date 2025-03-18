@@ -6,26 +6,26 @@ from backend_project.permissions import IsLessor
 from backend_project.utils import today
 from .models import (
     RentalRoom, 
-    RentalRoomImage, 
-    ChargesList, 
+    RoomImage, 
+    Charges, 
     RoomCode,
-    MonthlyChargesDetails,
+    MonthlyRoomInvoice,
     MonitoringRental
 )
 from .serializers import (
     RentalRoomSerializer, 
-    RentalRoomImageSerializer,
-    ChargesListSerializer,
+    RoomImageSerializer,
+    ChargesSerializer,
     RoomCodeSerializer,
-    MonthlyChargesDetailsSerializer,
+    MonthlyRoomInvoiceSerializer,
     MonitoringRentalSerializer
 )
 from .filters import (
     RentalRoomFilter,
-    RentalRoomImageFilter,
-    ChargesListFilter,
+    RoomImageFilter,
+    ChargesFilter,
     RoomCodeFilter,
-    MonthlyChargesDetailsFilter,
+    MonthlyRoomInvoiceFilter,
     MonitoringRentalFilter,
 )
 
@@ -55,10 +55,10 @@ class RentalRoomViewSet(viewsets.ModelViewSet):
     
     
 # -----------------------------------------------------------
-class RentalRoomImageViewSet(viewsets.ModelViewSet):
-    queryset = RentalRoomImage.objects.all()
-    serializer_class = RentalRoomImageSerializer
-    filterset_class = RentalRoomImageFilter
+class RoomImageViewSet(viewsets.ModelViewSet):
+    queryset = RoomImage.objects.all()
+    serializer_class = RoomImageSerializer
+    filterset_class = RoomImageFilter
     parser_classes = (MultiPartParser, FormParser)
     
     def get_permissions(self):
@@ -89,10 +89,10 @@ class RentalRoomImageViewSet(viewsets.ModelViewSet):
     
 
 # -----------------------------------------------------------
-class ChargesListViewSet(viewsets.ModelViewSet):
-    queryset = ChargesList.objects.all()
-    serializer_class = ChargesListSerializer
-    filterset_class = ChargesListFilter
+class ChargesViewSet(viewsets.ModelViewSet):
+    queryset = Charges.objects.all()
+    serializer_class = ChargesSerializer
+    filterset_class = ChargesFilter
     
     def get_permissions(self):
         permissions = [IsAuthenticated()]
@@ -160,10 +160,10 @@ class RoomCodeViewSet(viewsets.ModelViewSet):
     
 
 # -----------------------------------------------------------
-class MonthlyChargesDetailsViewSet(viewsets.ModelViewSet):
-    queryset = MonthlyChargesDetails.objects.all()
-    serializer_class = MonthlyChargesDetailsSerializer  
-    filterset_class = MonthlyChargesDetailsFilter
+class MonthlyRoomInvoiceViewSet(viewsets.ModelViewSet):
+    queryset = MonthlyRoomInvoice.objects.all()
+    serializer_class = MonthlyRoomInvoiceSerializer  
+    filterset_class = MonthlyRoomInvoiceFilter
     
     def get_permissions(self):
         permissions = [IsAuthenticated()]

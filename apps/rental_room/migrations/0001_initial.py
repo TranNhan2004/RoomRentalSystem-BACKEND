@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
             name='RentalRoomImage',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('image', models.ImageField(upload_to=apps.rental_room.models.rental_room_image_upload_to)),
+                ('image', models.ImageField(upload_to=apps.rental_room.models.room_image_upload_to)),
                 ('rental_room', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='images', to='rental_room.rentalroom')),
             ],
         ),
