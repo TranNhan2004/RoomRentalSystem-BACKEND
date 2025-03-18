@@ -107,6 +107,8 @@ class ChargesListViewSet(viewsets.ModelViewSet):
         self.queryset = self.filter_queryset(self.queryset)
 
         if mode == 'first':
+            print(1)
+            
             filtered_queryset = self.queryset.filter(
                 start_date__lte=today()
             ).filter(
