@@ -82,7 +82,7 @@ class RoomCode(models.Model):
     value = models.CharField(max_length=10)
     current_occupancy = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     max_occupancy = models.IntegerField(validators=[MinValueValidator(1)], default=1)
-    is_sharable = models.BooleanField(default=False)
+    is_shared = models.BooleanField(default=False)
     
     class Meta:
         constraints = [

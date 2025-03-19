@@ -17,14 +17,14 @@ def update_coords_and_distances_for_room(room_id, commune_id, additional_address
     rental_room.longitude = room_coords[1]
     rental_room.save()
     
-    Distance.objects.filter(rental_room=rental_room.id).delete()
+    Distance.objects.filter(rental_room=rental_room).delete()
     
     renters = CustomUser.objects.filter(is_active=True, role='RENTER')
     distances = []
     for renter in renters:
         renter_workplace_coords = (renter.workplace_latitude, renter.workplace_longitude)
         value = get_distance_value(room_coords, renter_workplace_coords)
-        distances.append(Distance(renter=renter.id, rental_room=rental_room.id, value=value))
+        distances.append(Distance(renter=renter, rental_room=rental_room, value=value))
     
     if len(distances) > 0:
         Distance.objects.bulk_create(distances)

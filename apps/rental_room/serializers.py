@@ -116,11 +116,11 @@ class RoomCodeSerializer(ModelSerializer):
         return super().create(validated_data)
     
     def update(self, instance, validated_data):
-        is_sharable = validated_data.get('is_sharable')
+        is_shared = validated_data.get('is_shared')
         max_occupancy = validated_data.get('max_occupancy')
                 
-        if is_sharable and instance.current_occupancy == instance.max_occupancy:
-            raise ValidationError("Cannot make room sharable if current occupancy is max.")
+        if is_shared and instance.current_occupancy == instance.max_occupancy:
+            raise ValidationError("Cannot make room be shared if current occupancy is max.")
         
         if max_occupancy and max_occupancy < instance.current_occupancy:
             raise ValidationError("Max occupancy cannot be lower than the current occupancy.")
@@ -240,7 +240,7 @@ class MonitoringRentalSerializer(ModelSerializer):
             room_code_record = RoomCode.objects.get(id=room_code.id)
             room_code_record.current_occupancy += 1
             if room_code_record.current_occupancy == room_code_record.max_occupancy:
-                room_code_record.is_sharable = False
+                room_code_record.is_shared = False
                 
             room_code_record.save()
             return instance

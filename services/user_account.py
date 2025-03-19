@@ -20,14 +20,14 @@ def update_coords_and_distances_for_renter(renter_id, workplace_commune_id, work
     renter.workplace_longitude = renter_wokplace_coords[1]
     renter.save()
     
-    Distance.objects.filter(renter=renter.id).delete()
+    Distance.objects.filter(renter=renter).delete()
     rental_rooms = RentalRoom.objects.all()
 
     distances = []
     for rental_room in rental_rooms:
         room_coords = (rental_room.latitude, rental_room.longitude)
         value = get_distance_value(room_coords, renter_wokplace_coords)
-        distances.append(Distance(renter=renter.id, rental_room=renter_id, value=value))
-
+        distances.append(Distance(renter=renter, rental_room=rental_room, value=value))
+        
     if len(distances) > 0:
         Distance.objects.bulk_create(distances)

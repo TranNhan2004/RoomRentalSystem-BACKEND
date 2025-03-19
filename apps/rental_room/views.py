@@ -70,10 +70,10 @@ class RoomImageViewSet(viewsets.ModelViewSet):
         return permissions
     
     def list(self, request, *args, **kwargs):
-        mode = request.query_params.get('mode', '').lower()
+        first_only = request.query_params.get('first_only', '').lower() == 'true'
         self.queryset = self.filter_queryset(self.queryset)
         
-        if mode == 'first':
+        if first_only:
             first_data = self.queryset.first()
             if first_data:
                 serializer = self.get_serializer(first_data)
@@ -103,12 +103,10 @@ class ChargesViewSet(viewsets.ModelViewSet):
         return permissions
             
     def list(self, request, *args, **kwargs):
-        mode = request.query_params.get('mode', '').lower()
+        first_only = request.query_params.get('first_only', '').lower() == 'true'
         self.queryset = self.filter_queryset(self.queryset)
 
-        if mode == 'first':
-            print(1)
-            
+        if first_only:    
             filtered_queryset = self.queryset.filter(
                 start_date__lte=today()
             ).filter(

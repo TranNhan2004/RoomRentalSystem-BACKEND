@@ -233,6 +233,8 @@ class SendEmailForRegisterView(APIView):
             settings.BACKEND_URL_FOR_SEND_EMAIL,
             settings.FRONTEND_URLS_FOR_SEND_EMAIL[user.role]
         )
+        
+        print(activate_link)
 
         try:
             email = EmailMessage(
