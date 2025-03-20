@@ -182,9 +182,7 @@ class MonthlyRoomInvoiceViewSet(viewsets.ModelViewSet):
     
     def list(self, request, *args, **kwargs):
         self.queryset = self.filter_queryset(self.queryset)
-        response = super().list(request, *args, **kwargs)
-        print(response.data)
-        return response
+        return super().list(request, *args, **kwargs)
     
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':

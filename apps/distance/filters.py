@@ -6,4 +6,4 @@ from .models import Distance
 class DistanceFilter(FilterSet):
     class Meta:
         model = Distance
-        fields = ['renter']
+        fields = ['renter', 'rental_room']
