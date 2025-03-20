@@ -47,7 +47,7 @@ class RoomImage(models.Model):
 # -----------------------------------------------------------
 class Charges(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    rental_room = models.ForeignKey(RentalRoom, related_name='charges_lists', on_delete=models.PROTECT)
+    rental_room = models.ForeignKey(RentalRoom, related_name='charges', on_delete=models.PROTECT)
     
     room_charge = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     deposit = models.IntegerField(default=0, validators=[MinValueValidator(0)])

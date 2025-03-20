@@ -1,8 +1,7 @@
-from django.db import models
-from django_filters import FilterSet, DateFilter
-from django.db.models import DateField as DateFieldCast
+from django_filters import FilterSet, DateFilter, CharFilter, BooleanFilter
+from django.db.models import DateField as DateFieldCast, Q, F
 from django.db.models.functions import Cast
-from django_filters import FilterSet, BooleanFilter, DateFilter
+from backend_project.utils import today
 from .models import (
     RentalRoom,
     RoomImage,
@@ -16,19 +15,52 @@ from .models import (
 # -----------------------------------------------------------
 class RentalRoomFilter(FilterSet):    
     manager_is_null = BooleanFilter(field_name='manager', lookup_expr='isnull')
-    is_empty = BooleanFilter(method='filter_is_empty')
-    
-    def filter_is_empty(self, queryset, name, value):
-        if value:
-            return queryset.filter(
-                room_codes__is_shareable=True,              
-                room_codes__remaining_occupancy__gt=0         
-            ).distinct()
+    _empty_mode = CharFilter(method='filter__empty_mode')
+    _room_charge_range = CharFilter(method='filter__room_charge_range')  
+
+    def filter__empty_mode(self, queryset, name, value):
+        if value == 'complete':
+            return queryset.filter(room_codes__current_occupancy=0).distinct()
+        
+        elif value == 'unavailable':
+            return queryset.filter(room_codes__current_occupancy=F('room_codes__max_occupancy')).distinct()
+        
+        elif value == 'shared':
+            return queryset.filter(room_codes__is_shared=True).distinct()
+        
         return queryset
     
+    def filter__room_charge_range(self, queryset, name, value):
+        if not value:  
+            return queryset
+        
+        try:
+            min_str, max_str = value.split('-')
+            min_charge = int(float(min_str) * 1_000_000)  
+            if max_str == 'inf':
+                max_charge = None  
+            else:
+                max_charge = int(float(max_str) * 1_000_000)  
+        except (ValueError, AttributeError):
+            return queryset  
+        
+        if max_charge is None:
+            return queryset.filter(
+                Q(charges__end_date__isnull=True) | Q(charges__end_date__gte=today()),
+                charges__start_date__lte=today(), 
+                charges__room_charge__gte=min_charge  
+            ).distinct()
+        else:
+            return queryset.filter(
+                Q(charges__end_date__isnull=True) | Q(charges__end_date__gte=today()),
+                charges__start_date__lte=today(),
+                charges__room_charge__gte=min_charge,
+                charges__room_charge__lte=max_charge
+            ).distinct()
+
     class Meta:
         model = RentalRoom
-        fields = ['commune', 'lessor', 'manager', 'manager_is_null', 'is_empty']
+        fields = ['commune', 'lessor', 'manager', 'manager_is_null', '_empty_mode', '_room_charge_range']
         
 
 # -----------------------------------------------------------
@@ -45,7 +77,7 @@ class ChargesFilter(FilterSet):
 
     def filter_to_date(self, queryset, name, value):
         return queryset.filter(
-            models.Q(end_date__lte=value) | models.Q(end_date__isnull=True)
+            Q(end_date__lte=value) | Q(end_date__isnull=True)
         )
   
     class Meta:
@@ -88,7 +120,7 @@ class MonitoringRentalFilter(FilterSet):
 
     def filter_to_date(self, queryset, name, value):
         return queryset.filter(
-            models.Q(end_date__lte=value) | models.Q(end_date__isnull=True)
+            Q(end_date__lte=value) | Q(end_date__isnull=True)
         )
     
     class Meta:
