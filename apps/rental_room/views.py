@@ -138,7 +138,7 @@ class RoomCodeViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         permissions = [IsAuthenticated()]
         
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+        if self.action in ['create', 'destroy']:
             permissions.append(IsLessor())
         
         return permissions
@@ -182,7 +182,9 @@ class MonthlyRoomInvoiceViewSet(viewsets.ModelViewSet):
     
     def list(self, request, *args, **kwargs):
         self.queryset = self.filter_queryset(self.queryset)
-        return super().list(request, *args, **kwargs)
+        response = super().list(request, *args, **kwargs)
+        print(response.data)
+        return response
     
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':

@@ -36,6 +36,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         room_id = instance.rental_room.id
         response = super().destroy(request, *args, **kwargs)
         
+        print(room_id)
         if room_id:
             update_average_rating(room_id)
         return response

@@ -1,4 +1,7 @@
 from django.db import models
+from django_filters import FilterSet, DateFilter
+from django.db.models import DateField as DateFieldCast
+from django.db.models.functions import Cast
 from django_filters import FilterSet, BooleanFilter, DateFilter
 from .models import (
     RentalRoom,
@@ -59,14 +62,25 @@ class RoomCodeFilter(FilterSet):
         
 # -----------------------------------------------------------
 class MonthlyRoomInvoiceFilter(FilterSet):
-    from_created_date = DateFilter(field_name='created_at', lookup_expr='gte')
-    to_created_date = DateFilter(field_name='created_at', lookup_expr='lte')
-    
+    from_created_date = DateFilter(method='filter_from_created_date')
+    to_created_date = DateFilter(method='filter_to_created_date')
+
     class Meta:
         model = MonthlyRoomInvoice
         fields = ['room_code', 'is_settled', 'from_created_date', 'to_created_date']
-        
 
+    def filter_from_created_date(self, queryset, name, value):
+        return queryset.annotate(
+            created_date=Cast('created_at', DateFieldCast())
+        ).filter(created_date__gte=value)
+
+    def filter_to_created_date(self, queryset, name, value):
+        return queryset.annotate(
+            created_date=Cast('created_at', DateFieldCast())
+        ).filter(created_date__lte=value)
+    
+    
+        
 # -----------------------------------------------------------
 class MonitoringRentalFilter(FilterSet):
     from_date = DateFilter(field_name='start_date', lookup_expr='gte')

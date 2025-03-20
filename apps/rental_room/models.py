@@ -96,7 +96,7 @@ class RoomCode(models.Model):
 # -----------------------------------------------------------
 class MonthlyRoomInvoice(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    room_code = models.ForeignKey(RoomCode, related_name='monthly_charges_details', on_delete=models.PROTECT)
+    room_code = models.ForeignKey(RoomCode, related_name='monthly_room_invoices', on_delete=models.CASCADE)
     
     old_kWh_reading = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     new_kWh_reading = models.IntegerField(default=0, validators=[MinValueValidator(0)])
@@ -130,8 +130,8 @@ class MonthlyRoomInvoice(models.Model):
 # -----------------------------------------------------------
 class MonitoringRental(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    room_code = models.ForeignKey(RoomCode, related_name='monitoring_rentals', on_delete=models.PROTECT)
-    renter = models.ForeignKey(CustomUser, related_name='rented_room', on_delete=models.PROTECT)
+    room_code = models.ForeignKey(RoomCode, related_name='monitoring_rentals', on_delete=models.CASCADE)
+    renter = models.ForeignKey(CustomUser, related_name='rented_rooms', on_delete=models.CASCADE)
         
     start_date = models.DateField(default=today, validators=[MinValueValidator(today)])
     end_date = models.DateField(null=True, blank=True)
