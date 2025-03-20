@@ -5,9 +5,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from typing import List, Dict
 
-from django.utils.timezone import now
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django.conf import settings
+from django.db.models import Q
+
+from backend_project.utils import today
 
 from rest_framework.views import APIView
 from rest_framework import status
@@ -47,17 +49,20 @@ class GetRecommendationsView(APIView):
         return weights
     
     def _get_scaled_rental_rooms_df(self, renter_id: str):
-        rental_rooms = RentalRoom.objects.all()
-        today = now().date()
+        rental_rooms = RentalRoom.objects.filter(manager__isnull=False)
         
         rental_rooms_data = []
         for rental_room in rental_rooms:
             distance = get_object_or_404(Distance, rental_room=rental_room.id, renter=renter_id)
-            charges = get_object_or_404(Charges, rental_room=rental_room.id, end_date__gte=today)
+            charges = get_object_or_404(
+                Charges, 
+                Q(end_date__isnull=True) | Q(end_date__gte=today()),
+                rental_room=rental_room.id, 
+                start_date__lte=today(),
+            )
+            
             rental_rooms_data.append({
                 'id': rental_room.id,
-                'name': rental_room.name,
-                'average_rating': rental_room.average_rating,
                 'room_charge': charges.room_charge,
                 'electricity_charge': charges.electricity_charge,
                 'water_charge': charges.water_charge,
@@ -103,6 +108,8 @@ class GetRecommendationsView(APIView):
             return Response([], status=status.HTTP_200_OK)
         
         rental_rooms_df = self._normalize_rental_rooms_df(rental_rooms_df)
+        
+        
         recommendations = []
 
-        return Response([], status=status.HTTP_200_OK)
+        return Response(recommendations, status=status.HTTP_200_OK)
