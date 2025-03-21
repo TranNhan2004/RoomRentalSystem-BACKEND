@@ -1,3 +1,4 @@
+from django.db.models import Q, Prefetch
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -35,6 +36,17 @@ class RentalRoomViewSet(viewsets.ModelViewSet):
     queryset = RentalRoom.objects.all()
     serializer_class = RentalRoomSerializer
     filterset_class = RentalRoomFilter
+    
+    def get_queryset(self):    
+        charges_queryset = Charges.objects.filter(
+            Q(start_date__lte=today()) &  
+            (Q(end_date__gte=today()) | Q(end_date__isnull=True))  
+        ).order_by('-start_date')  
+        
+        return RentalRoom.objects.prefetch_related(
+            'images',  
+            Prefetch('charges', queryset=charges_queryset, to_attr='filtered_charges')
+        )
     
     def get_permissions(self):
         permissions = [IsAuthenticated()]
@@ -75,6 +87,7 @@ class RoomImageViewSet(viewsets.ModelViewSet):
         
         if first_only:
             first_data = self.queryset.first()
+            
             if first_data:
                 serializer = self.get_serializer(first_data)
                 return Response([serializer.data], status=status.HTTP_200_OK)

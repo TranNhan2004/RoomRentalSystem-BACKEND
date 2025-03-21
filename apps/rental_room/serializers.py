@@ -3,7 +3,8 @@ from rest_framework.serializers import (
     PrimaryKeyRelatedField, 
     ValidationError, 
     TimeField,
-    ChoiceField
+    ChoiceField,
+    SerializerMethodField
 )
 from backend_project.utils import equals_address
 from apps.address.models import Commune
@@ -24,10 +25,20 @@ class RentalRoomSerializer(ModelSerializer):
     lessor = PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
     manager = PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False, allow_null=True)
     closing_time = TimeField(required=False, allow_null=True)   
-    
+    _image = SerializerMethodField()
+    _room_charge = SerializerMethodField()
+
     class Meta:
         model = RentalRoom
         fields = '__all__'
+    
+    def get__image(self, obj):
+        image = obj.images.first()  
+        return f'https://localhost:8000{image.image.url}' if image and image.image else ''
+
+    def get__room_charge(self, obj):
+        charge = obj.filtered_charges[0] if obj.filtered_charges else None
+        return charge.room_charge if charge else -1
     
     def is_valid(self, *, raise_exception=True):
         if 'closing_time' in self.initial_data and self.initial_data['closing_time'] == '':
