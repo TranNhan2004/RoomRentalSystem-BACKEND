@@ -173,13 +173,16 @@ class MonthlyRoomInvoiceSerializer(ModelSerializer):
         created_mode = validated_data.get('created_mode', 'auto')
         room_code = validated_data.get('room_code')
         
+        if room_code.current_occupancy == 0:
+            raise ValidationError("Room is not occupied.")
+        
         charges = Charges.objects.filter(
             rental_room=room_code.rental_room, 
             end_date__isnull=True
         ).first()
         if not charges:
             raise ValidationError("Charges list not found for this room.")
-        
+            
         has_not_settled_record = MonthlyRoomInvoice.objects.filter(
             room_code=room_code, 
             is_settled=False
@@ -263,6 +266,9 @@ class MonitoringRentalSerializer(ModelSerializer):
         if MonitoringRental.objects.filter(end_date__gte=start_date, room_code=room_code, renter=renter).exists():
             raise ValidationError("Start date is invalid.")
         
+        if CustomUser.objects.get(id=renter.id).role != 'RENTER':
+            raise ValidationError("Renter must be a renter.")
+        
         if room_code.current_occupancy == room_code.max_occupancy:
             raise ValidationError("Room is not available.")
         
@@ -284,4 +290,13 @@ class MonitoringRentalSerializer(ModelSerializer):
         if instance.end_date:
             raise ValidationError("Cannot update ended rental.")
         
-        return super().update(instance, validated_data)
+        updated_data = super().update(instance, validated_data)
+        
+        try:
+            room_code_record = RoomCode.objects.get(id=instance.room_code.id)
+            room_code_record.current_occupancy = max(room_code_record.current_occupancy - 1, 0)        
+            room_code_record.save()
+            return updated_data
+        
+        except RoomCode.DoesNotExist:
+            raise ValidationError("Room code with the given id does not exist.") 

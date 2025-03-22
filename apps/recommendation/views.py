@@ -11,7 +11,7 @@ from django.db.models import Q
 
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.rental_room.models import RentalRoom, Charges
@@ -23,7 +23,7 @@ from backend_project.permissions import IsRenter
 
 # -----------------------------------------------------------
 class GetRecommendationsView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsRenter]
     _feature_columns = [
         'room_charge', 'electricity_charge', 'water_charge',
         'wifi_charge', 'rubbish_charge', 'distance_value'
