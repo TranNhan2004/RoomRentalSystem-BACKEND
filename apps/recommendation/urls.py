@@ -3,5 +3,5 @@ from .views import GetRecommendationsView
 
 
 urlpatterns = [
-    path('get-recommendations/<str:renter>', GetRecommendationsView.as_view(), name='get-recommendation')
+    path('get-recommendations/', GetRecommendationsView.as_view(), name='get-recommendation')
 ]

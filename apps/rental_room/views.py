@@ -3,8 +3,11 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
-from backend_project.permissions import IsLessor
+from rest_framework.decorators import action
+from backend_project.permissions import IsLessor, IsRenter
 from backend_project.utils import today
+from apps.distance.models import Distance
+from apps.save_for_later.models import SaveForLater
 from .models import (
     RentalRoom, 
     RoomImage, 
@@ -43,9 +46,18 @@ class RentalRoomViewSet(viewsets.ModelViewSet):
             (Q(end_date__gte=today()) | Q(end_date__isnull=True))  
         ).order_by('-start_date')  
         
+        renter_id = self.request.query_params.get('_renter', None)
+        distance_queryset = Distance.objects.all()
+        save_for_later_queryset = SaveForLater.objects.all()
+        if renter_id:
+            distance_queryset = Distance.objects.filter(renter=renter_id)
+            save_for_later_queryset = SaveForLater.objects.filter(renter=renter_id)
+        
         return RentalRoom.objects.prefetch_related(
             'images',  
-            Prefetch('charges', queryset=charges_queryset, to_attr='filtered_charges')
+            Prefetch('charges', queryset=charges_queryset, to_attr='filtered_charges'),
+            Prefetch('distances', queryset=distance_queryset, to_attr='filtered_distances'),
+            Prefetch('saved_items', queryset=save_for_later_queryset, to_attr='filtered_saved_items'),
         )
     
     def get_permissions(self):
@@ -59,6 +71,23 @@ class RentalRoomViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         self.queryset = self.filter_queryset(self.queryset)
         return super().list(request, *args, **kwargs)
+    
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, IsRenter])
+    def list_by_ids(self, request, *args, **kwargs):
+        recommendation_list = request.data.get('_recommendation_list', None)    
+                
+        if not recommendation_list or not isinstance(recommendation_list, list):
+            return Response([], status=status.HTTP_200_OK)
+        
+        room_ids = [item['rental_room'] for item in recommendation_list]
+        
+        queryset = self.get_queryset()
+        queryset = queryset.filter(id__in=room_ids)
+        if not queryset.exists():
+            return Response([], status=status.HTTP_200_OK)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':

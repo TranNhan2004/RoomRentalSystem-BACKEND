@@ -57,4 +57,4 @@ class CustomUser(AbstractUser):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return self.email
+        return f'{self.email} - {self.id}'

@@ -27,6 +27,8 @@ class RentalRoomSerializer(ModelSerializer):
     closing_time = TimeField(required=False, allow_null=True)   
     _image = SerializerMethodField()
     _room_charge = SerializerMethodField()
+    _distance_value = SerializerMethodField()
+    _save_for_later = SerializerMethodField()
 
     class Meta:
         model = RentalRoom
@@ -37,8 +39,22 @@ class RentalRoomSerializer(ModelSerializer):
         return f'https://localhost:8000{image.image.url}' if image and image.image else ''
 
     def get__room_charge(self, obj):
-        charge = obj.filtered_charges[0] if obj.filtered_charges else None
+        charge = None
+        if hasattr(obj, 'filtered_charges') and obj.filtered_charges:
+            charge = obj.filtered_charges[0]            
         return charge.room_charge if charge else -1
+    
+    def get__distance_value(self, obj):
+        distance_value = None
+        if hasattr(obj, 'filtered_distances') and obj.filtered_distances:
+            distance_value = obj.filtered_distances[0].value
+        return distance_value
+    
+    def get__save_for_later(self, obj):
+        save_for_later = None
+        if hasattr(obj, 'filtered_saved_items') and obj.filtered_saved_items:
+            save_for_later = obj.filtered_saved_items[0].rental_room.id
+        return save_for_later
     
     def is_valid(self, *, raise_exception=True):
         if 'closing_time' in self.initial_data and self.initial_data['closing_time'] == '':
@@ -59,6 +75,11 @@ class RentalRoomSerializer(ModelSerializer):
         old_commune = instance.commune
         old_additional_address = instance.additional_address
         old_address = f"{old_additional_address}, {old_commune.id}" if old_commune else ""
+        
+        old_total_number = RoomCode.objects.filter(rental_room=instance.id).count()
+        new_total_number = validated_data.get('total_number', instance.total_number)
+        if new_total_number < old_total_number:
+            raise ValidationError("Total number of rooms cannot decrease.")
         
         updated_instance = super().update(instance, validated_data)
         
