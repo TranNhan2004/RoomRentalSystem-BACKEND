@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import normalize
@@ -63,8 +65,6 @@ class GetRecommendationsView(APIView):
             return {}
         
         max_date = search_room_histories.first().created_at.date()
-        # if max_date == today():
-        #     return {}
         
         weights = {}
         for search_room_history in search_room_histories:
@@ -159,11 +159,12 @@ class GetRecommendationsView(APIView):
                 recommendation_weights[closest_room_id] = \
                     recommendation_weights.get(closest_room_id, 0) + weight
         
+        choices = self._k + random.randint(1, self._k // 2)
         recommendations = sorted(
             recommendation_weights.items(),
             key=lambda x: x[1],
             reverse=True
-        )[:self._k]
+        )[:choices]
         
         recommendation_list = [{"rental_room": room_id} for room_id, _ in recommendations]
         

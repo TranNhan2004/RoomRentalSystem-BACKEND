@@ -27,6 +27,7 @@ class RentalRoomSerializer(ModelSerializer):
     closing_time = TimeField(required=False, allow_null=True)   
     _image = SerializerMethodField()
     _room_charge = SerializerMethodField()
+    _charges = SerializerMethodField()
     _distance_value = SerializerMethodField()
     _save_for_later = SerializerMethodField()
 
@@ -39,10 +40,15 @@ class RentalRoomSerializer(ModelSerializer):
         return f'https://localhost:8000{image.image.url}' if image and image.image else ''
 
     def get__room_charge(self, obj):
-        charge = None
+        charges = None
         if hasattr(obj, 'filtered_charges') and obj.filtered_charges:
-            charge = obj.filtered_charges[0]            
-        return charge.room_charge if charge else -1
+            charges = obj.filtered_charges[0]            
+        return charges.room_charge if charges else -1
+    
+    def get__charges(self, obj):
+        if hasattr(obj, 'filtered_charges') and obj.filtered_charges:
+            return ChargesSerializer(obj.filtered_charges[0]).data            
+        return None
     
     def get__distance_value(self, obj):
         distance_value = None

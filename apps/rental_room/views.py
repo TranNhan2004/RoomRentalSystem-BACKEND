@@ -40,21 +40,21 @@ class RentalRoomViewSet(viewsets.ModelViewSet):
     serializer_class = RentalRoomSerializer
     filterset_class = RentalRoomFilter
     
-    def get_queryset(self):    
+    def get_queryset(self):
         charges_queryset = Charges.objects.filter(
             Q(start_date__lte=today()) &  
             (Q(end_date__gte=today()) | Q(end_date__isnull=True))  
-        ).order_by('-start_date')  
-        
+        ).order_by('-start_date')
+
         renter_id = self.request.query_params.get('_renter', None)
         distance_queryset = Distance.objects.all()
         save_for_later_queryset = SaveForLater.objects.all()
         if renter_id:
             distance_queryset = Distance.objects.filter(renter=renter_id)
             save_for_later_queryset = SaveForLater.objects.filter(renter=renter_id)
-        
+
         return RentalRoom.objects.prefetch_related(
-            'images',  
+            'images',
             Prefetch('charges', queryset=charges_queryset, to_attr='filtered_charges'),
             Prefetch('distances', queryset=distance_queryset, to_attr='filtered_distances'),
             Prefetch('saved_items', queryset=save_for_later_queryset, to_attr='filtered_saved_items'),

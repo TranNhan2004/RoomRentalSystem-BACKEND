@@ -56,6 +56,7 @@ class CustomUserViewSet(ModelViewSet):
     
 # -----------------------------------------------------------
 class LoginView(TokenObtainPairView):
+    permission_classes = [AllowAny]
     serializer_class = CustomTokenObtainPairSerializer
     
     def post(self, request, *args, **kwargs):
