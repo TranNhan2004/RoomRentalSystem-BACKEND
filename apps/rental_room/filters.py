@@ -23,7 +23,11 @@ class RentalRoomFilter(FilterSet):
             return queryset.filter(room_codes__current_occupancy=0).distinct()
         
         elif value == 'unavailable':
-            return queryset.filter(room_codes__current_occupancy=F('room_codes__max_occupancy')).distinct()
+            return queryset.filter(
+                (Q(room_codes__current_occupancy=F('room_codes__max_occupancy')) | 
+                Q(room_codes__is_shared=False)) &
+                Q(room_codes__current_occupancy__gt=0) 
+            ).distinct()
         
         elif value == 'shared':
             return queryset.filter(room_codes__is_shared=True).distinct()

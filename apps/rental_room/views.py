@@ -1,4 +1,6 @@
+from random import randint
 from django.db.models import Q, Prefetch
+from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -76,8 +78,23 @@ class RentalRoomViewSet(viewsets.ModelViewSet):
     def list_by_ids(self, request, *args, **kwargs):
         recommendation_list = request.data.get('_recommendation_list', None)    
                 
-        if not recommendation_list or not isinstance(recommendation_list, list):
+        if not isinstance(recommendation_list, list):
             return Response([], status=status.HTTP_200_OK)
+        
+        if len(recommendation_list) == 0:
+            k = settings.RECOMMENDATION_K_CLOSEST_ROOMS
+            room_count = k + randint(1, k // 2)
+
+            queryset = self.get_queryset()
+            renter_id = request.data.get('_renter', None) 
+            if renter_id:
+                queryset = queryset.filter(distances__renter=renter_id)
+                
+            closest_rooms = queryset.order_by('distances__value')[:room_count]
+
+            serializer = self.get_serializer(closest_rooms, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
         
         room_ids = [item['rental_room'] for item in recommendation_list]
         
