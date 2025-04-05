@@ -132,8 +132,8 @@ class GetRecommendationsView(APIView):
         closest_rooms = rental_rooms_df[rental_rooms_df['id'] != room_id] \
             .sort_values('similarity_to_target', ascending=False) \
             .head(self._k)
-        
-        return closest_rooms['id'].tolist()
+            
+        return closest_rooms[['id', 'similarity_to_target']].to_numpy().tolist()
     
     
     def get(self, request):
@@ -155,9 +155,11 @@ class GetRecommendationsView(APIView):
         recommendation_weights = {}
         for room_id, weight in weights.items():
             k_closest_rooms = self._get_top_k_closest_rooms(room_id, rental_rooms_df)
-            for closest_room_id in k_closest_rooms:
-                recommendation_weights[closest_room_id] = \
-                    recommendation_weights.get(closest_room_id, 0) + weight
+            for closest_room_id, cosine_similarity in k_closest_rooms:
+                if closest_room_id not in recommendation_weights:
+                    recommendation_weights[closest_room_id] = cosine_similarity * weight
+                else:
+                    recommendation_weights[closest_room_id] += cosine_similarity * weight 
         
         choices = self._k + random.randint(1, self._k // 2)
         recommendations = sorted(
