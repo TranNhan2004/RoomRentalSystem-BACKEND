@@ -153,13 +153,26 @@ class GetRecommendationsView(APIView):
         rental_rooms_df[normalized_df.columns] = normalized_df
         
         recommendation_weights = {}
+        avg_cosine_scores = []
+        total_weight = 0.0
+        
         for room_id, weight in weights.items():
             k_closest_rooms = self._get_top_k_closest_rooms(room_id, rental_rooms_df)
+            if not k_closest_rooms:
+                continue
+            
+            avg_cosine = np.mean([cosine_sim for _, cosine_sim in k_closest_rooms])
+            avg_cosine_scores.append(weight * avg_cosine)
+            total_weight += weight
+
             for closest_room_id, cosine_similarity in k_closest_rooms:
                 if closest_room_id not in recommendation_weights:
                     recommendation_weights[closest_room_id] = cosine_similarity * weight
                 else:
-                    recommendation_weights[closest_room_id] += cosine_similarity * weight 
+                    recommendation_weights[closest_room_id] += cosine_similarity * weight
+        
+        weighted_avg_cosine = sum(avg_cosine_scores) / total_weight if total_weight > 0 else 0.0
+        print(f"Weighted Average Cosine Similarity: {weighted_avg_cosine}")
         
         choices = self._k + random.randint(1, self._k // 2)
         recommendations = sorted(

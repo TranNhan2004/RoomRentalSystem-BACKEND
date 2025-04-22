@@ -11,5 +11,5 @@ media/
 *.py[cod]
 *.so
 *.secret
-
+*.pfx
 *.pem
